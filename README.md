@@ -1,94 +1,95 @@
 # askable
 
-> Give any UI element LLM awareness in one line.
+> Give any UI element LLM awareness with one attribute.
 
 [![npm](https://img.shields.io/npm/v/@askable/core?color=6366f1&label=npm)](https://www.npmjs.com/package/@askable/core)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@askable/core?color=6366f1&label=core)](https://bundlephobia.com/package/@askable/core)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@askable/core?color=6366f1&label=~1kb)](https://bundlephobia.com/package/@askable/core)
 [![license](https://img.shields.io/npm/l/@askable/core?color=6366f1)](./LICENSE)
+[![tests](https://img.shields.io/badge/tests-50%20passing-22c55e)](./packages)
 
+Your LLM doesn't know what the user is looking at. They click a chart, hover an error row, focus a form field — then ask *"what's wrong?"* Your AI answers with a guess.
+
+**askable** fixes this in one attribute. Works with React, Vue, Svelte, Streamlit, Django, or plain HTML.
+
+---
+
+## The magic moment
+
+**Without askable:**
+```
+User clicks a revenue chart. Types: "why is this dropping?"
+
+LLM receives: "why is this dropping?"
+LLM answers:  "Revenue can decline due to many factors such as..."
+```
+
+**With askable:**
 ```html
-<div data-askable='{"metric":"revenue","period":"Q3","value":"$2.3M"}'>
-  Revenue: $2.3M
+<div data-askable='{"metric":"revenue","period":"Q3","delta":"-12%","prev":"$2.6M","curr":"$2.3M"}'>
+  Q3 Revenue: $2.3M ↓12%
 </div>
 ```
+```
+User clicks that div. Types: "why is this dropping?"
 
-```ts
-ctx.toPromptContext();
-// → "User is focused on: — metric: revenue, period: Q3, value: $2.3M — value "Revenue: $2.3M""
+LLM receives: "UI context: User is focused on: metric: revenue, period: Q3,
+              delta: -12%, prev: $2.6M, curr: $2.3M — value "Q3 Revenue: $2.3M ↓12%"
+              Question: why is this dropping?"
+
+LLM answers:  "Your Q3 revenue fell 12% from $2.6M to $2.3M. Looking at the
+              data you're viewing, the most likely causes are..."
 ```
 
-That one string goes straight into your LLM prompt. Your AI assistant now knows exactly what the user was looking at.
-
----
-
-## The problem
-
-When users ask your AI assistant a question, it has no idea what they're looking at.
-
-They click a revenue chart. They hover over an error row. They focus a specific form field. Your LLM receives `"what's wrong?"` with zero context — and gives a useless generic answer.
-
-You *could* manually track every interaction. Write a custom event system. Serialize state. Thread it through your app. Keep it in sync.
-
-Or you could add one attribute.
-
----
-
-## The solution
-
-Annotate elements with `data-askable`. That's it.
-
-```html
-<!-- Any element, any framework -->
-<section data-askable='{"chart":"churn-rate","cohort":"Q3","value":"4.2%"}'>
-  ...your chart...
-</section>
-```
-
-```ts
-import { createAskableContext } from '@askable/core';
-
-const ctx = createAskableContext();
-ctx.observe(document); // watches clicks, focus, and hover — automatically
-
-// Wire into any LLM call
-const messages = [
-  { role: 'system', content: `UI context: ${ctx.toPromptContext()}` },
-  { role: 'user', content: userQuestion },
-];
-```
+One attribute. The difference between a generic chatbot and a contextual AI copilot.
 
 ---
 
 ## Install
 
 ```bash
-# Core (zero dependencies, any framework)
+# Zero-dependency core — works anywhere
 npm install @askable/core
 
-# React bindings
-npm install @askable/react @askable/core
+# Framework bindings
+npm install @askable/react    # React 17+
+npm install @askable/vue      # Vue 3
+npm install @askable/svelte   # Svelte 4
+
+# Python
+pip install askable-streamlit  # Streamlit
+pip install askable-django     # Django 4+
 ```
 
 ---
 
-## How it works
+## 30-second quickstart
 
-**1. Annotate** — Add `data-askable` to elements that carry meaning. Use JSON for structured metadata, or a plain string for simple labels.
+```html
+<!-- 1. Annotate elements with data-askable -->
+<div data-askable='{"widget":"churn-rate","value":"4.2%","trend":"up"}'>
+  Churn Rate: 4.2%
+</div>
 
-**2. Observe** — Call `ctx.observe(document)` once. Askable attaches listeners to every `[data-askable]` element and watches for new ones via `MutationObserver`. Zero configuration.
+<!-- 2. One line to start observing -->
+<script type="module">
+  import { createAskableContext } from 'https://esm.sh/@askable/core';
+  const ctx = createAskableContext();
+  ctx.observe(document);
 
-**3. Inject** — Call `ctx.toPromptContext()` when building your LLM request. It returns a ready-to-use natural language string describing what the user is currently focused on.
-
-```
-User clicks "Delete Account" button
-        ↓
-ctx.getFocus() → { meta: { action: "delete", target: "account" }, text: "Delete Account", ... }
-        ↓
-ctx.toPromptContext() → "User is focused on: — action: delete, target: account — value "Delete Account""
-        ↓
-LLM prompt: "UI context: User is focused on: — action: delete, target: account..."
-        ↓
-AI gives a specific, contextual answer about account deletion
+  // 3. Inject into any LLM call
+  async function ask(question) {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: `UI context: ${ctx.toPromptContext()}` },
+          { role: 'user',   content: question },
+        ],
+      }),
+    });
+    return res.json();
+  }
+</script>
 ```
 
 ---
@@ -100,32 +101,25 @@ AI gives a specific, contextual answer about account deletion
 ```tsx
 import { Askable, useAskable } from '@askable/react';
 
-// Step 1: wrap elements
 function Dashboard() {
   return (
-    <Askable meta={{ chart: 'monthly-revenue', period: 'Q3', value: '$128k' }}>
+    <Askable meta={{ chart: 'revenue', period: 'Q3', delta: '-12%' }}>
       <RevenueChart />
     </Askable>
   );
 }
 
-// Step 2: read context anywhere
 function AICopilot() {
   const { promptContext } = useAskable();
 
-  async function ask(question: string) {
-    return fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: `UI context: ${promptContext}` },
-          { role: 'user', content: question },
-        ],
-      }),
-    });
-  }
-
-  return <input onKeyDown={(e) => e.key === 'Enter' && ask(e.currentTarget.value)} />;
+  return (
+    <input
+      placeholder="Ask about what you're looking at..."
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') sendToLLM(promptContext, e.currentTarget.value);
+      }}
+    />
+  );
 }
 ```
 
@@ -133,24 +127,15 @@ function AICopilot() {
 
 ```vue
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { createAskableContext } from '@askable/core';
-
-const ctx = createAskableContext();
-const promptContext = ref('');
-
-onMounted(() => {
-  ctx.observe(document);
-  ctx.on('focus', () => { promptContext.value = ctx.toPromptContext(); });
-});
-
-onUnmounted(() => ctx.destroy());
+import { Askable, useAskable } from '@askable/vue';
+const { promptContext } = useAskable();
 </script>
 
 <template>
-  <div data-askable='{"panel":"user-settings","section":"billing"}'>
-    <BillingPanel />
-  </div>
+  <Askable :meta="{ chart: 'revenue', period: 'Q3' }" as="section">
+    <RevenueChart />
+  </Askable>
+  <AIChatInput :context="promptContext" />
 </template>
 ```
 
@@ -158,42 +143,98 @@ onUnmounted(() => ctx.destroy());
 
 ```svelte
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { createAskableContext } from '@askable/core';
+  import { createAskableStore } from '@askable/svelte';
+  import Askable from '@askable/svelte/Askable.svelte';
 
-  const ctx = createAskableContext();
-  let promptContext = '';
-
-  onMount(() => {
-    ctx.observe(document);
-    ctx.on('focus', () => { promptContext = ctx.toPromptContext(); });
-  });
-
-  onDestroy(() => ctx.destroy());
+  const { promptContext, destroy } = createAskableStore();
+  onDestroy(destroy);
 </script>
 
-<section data-askable='{"page":"analytics","view":"cohort-retention"}'>
-  <CohortChart />
-</section>
+<Askable meta={{ chart: 'revenue', period: 'Q3' }} as="section">
+  <RevenueChart />
+</Askable>
+
+<AIChatInput context={$promptContext} />
+```
+
+### Streamlit
+
+```python
+import streamlit as st
+from askable.streamlit import askable_context
+
+st.markdown(
+    "<div data-askable='{\"metric\":\"revenue\",\"value\":\"$2.3M\"}'>Q3 Revenue: $2.3M</div>",
+    unsafe_allow_html=True,
+)
+
+focus = askable_context()  # returns { meta, text, timestamp } or None
+
+if focus and st.button("Ask AI"):
+    response = your_llm(
+        system=f"UI context: User is viewing: {focus['text']} (meta: {focus['meta']})",
+        user=st.text_input("Question"),
+    )
+    st.write(response)
+```
+
+### Django
+
+```django
+{# settings.py: add 'askable.middleware.AskableMiddleware' to MIDDLEWARE #}
+{# Core JS auto-injected before </body> — no template changes needed #}
+
+{% load askable_tags %}
+
+{% askable meta=chart_meta as="section" %}
+  <canvas id="revenue-chart"></canvas>
+{% endaskable %}
+```
+
+```python
+# views.py — read context from the JS layer
+def ai_chat(request):
+    data = json.loads(request.body)
+    return JsonResponse({
+        'answer': llm.chat(
+            system=f"UI context: {data['context']}",
+            user=data['question'],
+        )
+    })
 ```
 
 ### Vanilla JS
 
 ```html
+<div data-askable='{"page":"pricing","plan":"pro"}'>
+  <h2>Pro Plan — $49/mo</h2>
+</div>
+
 <script type="module">
   import { createAskableContext } from 'https://esm.sh/@askable/core';
-
   const ctx = createAskableContext();
   ctx.observe(document);
-
-  ctx.on('focus', () => {
-    document.querySelector('#ai-context').value = ctx.toPromptContext();
-  });
+  ctx.on('focus', () => window.__uiContext = ctx.toPromptContext());
 </script>
+```
 
-<div data-askable='{"widget":"error-log","severity":"critical","count":3}'>
-  3 critical errors
-</div>
+---
+
+## How it works
+
+```
+1. ANNOTATE — add data-askable to any element that carries meaning
+   <div data-askable='{"chart":"revenue","period":"Q3"}'>...</div>
+
+2. OBSERVE — one call, covers your whole app
+   ctx.observe(document)
+   ↳ attaches click + focus + hover listeners to every [data-askable]
+   ↳ MutationObserver picks up dynamically added elements
+
+3. INJECT — one string, ready for any LLM
+   ctx.toPromptContext()
+   → "User is focused on: chart: revenue, period: Q3 — value "Q3 Revenue: $2.3M""
+   ↳ prepend to your system prompt — done
 ```
 
 ---
@@ -205,110 +246,115 @@ onUnmounted(() => ctx.destroy());
 ```ts
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { ctx } from './askable'; // your shared ctx instance
+import { ctx } from './askable-singleton';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
-
   return streamText({
     model: openai('gpt-4o'),
-    system: `You are a helpful UI assistant.\n\nCurrent UI context:\n${ctx.toPromptContext()}`,
+    system: `You are a helpful UI assistant.\n\n${ctx.toPromptContext()}`,
     messages,
   });
 }
 ```
 
-### OpenAI SDK
+### OpenAI
 
 ```ts
 import OpenAI from 'openai';
-
 const openai = new OpenAI();
 
-async function askWithContext(question: string) {
-  return openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a helpful UI assistant.\n\n${ctx.toPromptContext()}`,
-      },
-      { role: 'user', content: question },
-    ],
-  });
-}
+const reply = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [
+    { role: 'system',  content: `UI context:\n${ctx.toPromptContext()}` },
+    { role: 'user',    content: userQuestion },
+  ],
+});
 ```
 
 ### Anthropic Claude
 
 ```ts
 import Anthropic from '@anthropic-ai/sdk';
-
 const client = new Anthropic();
 
-async function askWithContext(question: string) {
-  return client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1024,
-    system: `You are a helpful UI assistant.\n\n${ctx.toPromptContext()}`,
-    messages: [{ role: 'user', content: question }],
-  });
-}
+const reply = await client.messages.create({
+  model: 'claude-opus-4-6',
+  max_tokens: 1024,
+  system: `UI context:\n${ctx.toPromptContext()}`,
+  messages: [{ role: 'user', content: userQuestion }],
+});
 ```
 
 ---
 
-## Why askable?
+## Why not just pass state manually?
 
-| | Manual tracking | askable |
+You could. You'd also write your own router.
+
+The issue isn't whether you *can* wire UI state to your LLM — it's that every team does it differently, re-implements it per framework, forgets to update it when the UI changes, and ends up with a tangled mess of custom events and serialization logic that breaks the moment someone refactors a component.
+
+askable is the **universal contract** between your UI and your LLM. One attribute on the element. One method call at the AI boundary. Works regardless of whether your stack is React + Vercel AI SDK, Django + OpenAI, or Svelte + Anthropic.
+
+| | DIY tracking | askable |
 |---|---|---|
-| Setup | Write custom event system | Add `data-askable` attribute |
-| Maintenance | Update tracking on every UI change | Attributes live in markup |
-| Serialization | Custom code per component | `ctx.toPromptContext()` |
-| Framework support | Re-implement per framework | One core, thin adapters |
-| Bundle cost | Your code | ~1kb gzipped |
-| MutationObserver | Manual wiring | Built-in |
-| Type safety | DIY | Full TypeScript types |
+| Setup per component | Write custom event | Add `data-askable` |
+| Serialization | Custom per app | `ctx.toPromptContext()` |
+| Dynamic elements | Manual wiring | MutationObserver built-in |
+| Framework lock-in | Re-implement per framework | One core, thin adapters |
+| Maintenance | Update on every UI change | Lives in markup |
+| Bundle cost | Your code + your bugs | ~1kb gzipped, zero deps |
+| Python support | You build it | Streamlit + Django packages |
 
 ---
 
 ## Packages
 
-| Package | Description | Size |
-|---|---|---|
-| [`@askable/core`](./packages/core) | Framework-agnostic core. Zero dependencies. | ~1kb gz |
-| [`@askable/react`](./packages/react) | React `<Askable>` component + `useAskable` hook | ~0.5kb gz |
+| Package | Lang | Description | Size |
+|---|---|---|---|
+| [`@askable/core`](./packages/core) | TS | Framework-agnostic observer + context. Zero dependencies. | ~1kb gz |
+| [`@askable/react`](./packages/react) | TS | `<Askable>` component + `useAskable()` hook | ~0.5kb gz |
+| [`@askable/vue`](./packages/vue) | TS | `<Askable>` component + `useAskable()` composable | ~0.5kb gz |
+| [`@askable/svelte`](./packages/svelte) | TS | `<Askable>` component + `createAskableStore()` | ~0.5kb gz |
+| [`askable-streamlit`](./packages/python/streamlit) | Python | Streamlit custom component — returns focus as Python dict | — |
+| [`askable-django`](./packages/python/django) | Python | Template tags + auto-inject middleware | — |
 
 ---
 
 ## API reference
 
-### `createAskableContext()`
+### `createAskableContext() → AskableContext`
 
-Returns a new `AskableContext` instance.
+Factory. Returns a new context instance.
 
-### `ctx.observe(el)`
+### `ctx.observe(el: HTMLElement | Document)`
 
-Starts watching `el` for `[data-askable]` elements. Attaches `click`, `focus`, and `mouseenter` listeners. Uses `MutationObserver` to handle dynamically added elements.
+Start watching `el`. Attaches `click`, `focus`, and `mouseenter` to all `[data-askable]` elements, current and future (via `MutationObserver`).
 
-### `ctx.getFocus()`
+### `ctx.getFocus() → AskableFocus | null`
 
 Returns `{ meta, text, element, timestamp }` or `null`.
 
+- `meta` — JSON-parsed object, or raw string if the attribute isn't valid JSON
+- `text` — `element.textContent`, trimmed and truncated to 200 chars
+- `timestamp` — unix ms
+
 ### `ctx.on('focus', handler)` / `ctx.off('focus', handler)`
 
-Subscribe/unsubscribe to focus events.
+Subscribe/unsubscribe to focus changes.
 
-### `ctx.toPromptContext()`
+### `ctx.toPromptContext() → string`
 
-Returns a natural language string like:
+Natural language string ready to inject into a system prompt:
 ```
-User is focused on: — metric: revenue, period: Q3 — value "Revenue: $2.3M"
+User is focused on: — metric: revenue, period: Q3 — value "Q3 Revenue: $2.3M"
 ```
+Returns `"No UI element is currently focused."` when nothing is focused.
 
 ### `ctx.destroy()`
 
-Removes all listeners and observers. Call on cleanup.
+Remove all listeners and observers. Call on component unmount.
 
 ---
 
