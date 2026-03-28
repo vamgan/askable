@@ -1,7 +1,7 @@
 {
-  "name": "@askable/core",
+  "name": "@askable/vue",
   "version": "0.1.0",
-  "description": "Framework-agnostic context tracker for LLM-aware UIs",
+  "description": "Vue 3 bindings for askable — LLM-aware UI context",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,10 +17,19 @@
     "dev": "tsc --watch",
     "test": "vitest run"
   },
-  "keywords": ["llm", "context", "ui", "accessibility", "focus"],
+  "keywords": ["llm", "context", "vue", "vue3", "ui", "focus"],
   "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@askable/core": "*"
+  },
   "devDependencies": {
+    "@askable/core": "*",
+    "@vue/test-utils": "^2.4.6",
     "typescript": "^5.4.5",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "vue": "^3.4.29"
   }
 }
