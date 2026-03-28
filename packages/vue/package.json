@@ -11,7 +11,12 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "README.md"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vamgan/askable.git",
+    "directory": "packages/vue"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -23,7 +28,7 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@askable/core": "*"
+    "@askable/core": "^0.1.0"
   },
   "devDependencies": {
     "@askable/core": "*",

@@ -7,6 +7,12 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="askable contributors",
+    url="https://github.com/vamgan/askable",
+    project_urls={
+        "Homepage": "https://github.com/vamgan/askable",
+        "Source": "https://github.com/vamgan/askable/tree/main/packages/python/django",
+        "Bug Tracker": "https://github.com/vamgan/askable/issues",
+    },
     license="MIT",
     packages=find_packages(),
     python_requires=">=3.9",
