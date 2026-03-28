@@ -1,4 +1,4 @@
-import type { AskableFocus, AskableContext } from '@askable/core';
+import type { AskableFocus, AskableContext } from '@askable-ui/core';
 export interface UseAskableResult {
     focus: AskableFocus | null;
     promptContext: string;

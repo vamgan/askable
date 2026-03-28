@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createAskableContext } from '@askable/core';
+import { createAskableContext } from '@askable-ui/core';
 let globalCtx = null;
 let refCount = 0;
 function getGlobalCtx() {
