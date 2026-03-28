@@ -1,0 +1,1 @@
+{"version":3,"file":"useAskable.d.ts","sourceRoot":"","sources":["../src/useAskable.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,YAAY,EAAE,cAAc,EAAE,MAAM,eAAe,CAAC;AAalE,MAAM,WAAW,gBAAgB;IAC/B,KAAK,EAAE,YAAY,GAAG,IAAI,CAAC;IAC3B,aAAa,EAAE,MAAM,CAAC;IACtB,GAAG,EAAE,cAAc,CAAC;CACrB;AAED,wBAAgB,UAAU,IAAI,gBAAgB,CA0B7C"}
