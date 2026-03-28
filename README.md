@@ -2,9 +2,9 @@
 
 > Give any UI element LLM awareness with one attribute.
 
-[![npm](https://img.shields.io/npm/v/@askable/core?color=6366f1&label=npm)](https://www.npmjs.com/package/@askable/core)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@askable/core?color=6366f1&label=~1kb)](https://bundlephobia.com/package/@askable/core)
-[![license](https://img.shields.io/npm/l/@askable/core?color=6366f1)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/@askable-ui/core?color=6366f1&label=npm)](https://www.npmjs.com/package/@askable-ui/core)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@askable-ui/core?color=6366f1&label=~1kb)](https://bundlephobia.com/package/@askable-ui/core)
+[![license](https://img.shields.io/npm/l/@askable-ui/core?color=6366f1)](./LICENSE)
 [![tests](https://img.shields.io/badge/tests-50%20passing-22c55e)](./packages)
 
 Your LLM doesn't know what the user is looking at. They click a chart, hover an error row, focus a form field — then ask *"what's wrong?"* Your AI answers with a guess.
@@ -48,12 +48,12 @@ One attribute. The difference between a generic chatbot and a contextual AI copi
 
 ```bash
 # Zero-dependency core — works anywhere
-npm install @askable/core
+npm install @askable-ui/core
 
 # Framework bindings
-npm install @askable/react    # React 17+
-npm install @askable/vue      # Vue 3
-npm install @askable/svelte   # Svelte 4
+npm install @askable-ui/react    # React 17+
+npm install @askable-ui/vue      # Vue 3
+npm install @askable-ui/svelte   # Svelte 4
 
 # Python
 pip install askable-streamlit  # Streamlit
@@ -72,7 +72,7 @@ pip install askable-django     # Django 4+
 
 <!-- 2. One line to start observing -->
 <script type="module">
-  import { createAskableContext } from 'https://esm.sh/@askable/core';
+  import { createAskableContext } from 'https://esm.sh/@askable-ui/core';
   const ctx = createAskableContext();
   ctx.observe(document);
 
@@ -99,7 +99,7 @@ pip install askable-django     # Django 4+
 ### React
 
 ```tsx
-import { Askable, useAskable } from '@askable/react';
+import { Askable, useAskable } from '@askable-ui/react';
 
 function Dashboard() {
   return (
@@ -127,7 +127,7 @@ function AICopilot() {
 
 ```vue
 <script setup lang="ts">
-import { Askable, useAskable } from '@askable/vue';
+import { Askable, useAskable } from '@askable-ui/vue';
 const { promptContext } = useAskable();
 </script>
 
@@ -143,8 +143,8 @@ const { promptContext } = useAskable();
 
 ```svelte
 <script lang="ts">
-  import { createAskableStore } from '@askable/svelte';
-  import Askable from '@askable/svelte/Askable.svelte';
+  import { createAskableStore } from '@askable-ui/svelte';
+  import Askable from '@askable-ui/svelte/Askable.svelte';
 
   const { promptContext, destroy } = createAskableStore();
   onDestroy(destroy);
@@ -211,7 +211,7 @@ def ai_chat(request):
 </div>
 
 <script type="module">
-  import { createAskableContext } from 'https://esm.sh/@askable/core';
+  import { createAskableContext } from 'https://esm.sh/@askable-ui/core';
   const ctx = createAskableContext();
   ctx.observe(document);
   ctx.on('focus', () => window.__uiContext = ctx.toPromptContext());
@@ -313,10 +313,10 @@ askable is the **universal contract** between your UI and your LLM. One attribut
 
 | Package | Lang | Description | Size |
 |---|---|---|---|
-| [`@askable/core`](./packages/core) | TS | Framework-agnostic observer + context. Zero dependencies. | ~1kb gz |
-| [`@askable/react`](./packages/react) | TS | `<Askable>` component + `useAskable()` hook | ~0.5kb gz |
-| [`@askable/vue`](./packages/vue) | TS | `<Askable>` component + `useAskable()` composable | ~0.5kb gz |
-| [`@askable/svelte`](./packages/svelte) | TS | `<Askable>` component + `createAskableStore()` | ~0.5kb gz |
+| [`@askable-ui/core`](./packages/core) | TS | Framework-agnostic observer + context. Zero dependencies. | ~1kb gz |
+| [`@askable-ui/react`](./packages/react) | TS | `<Askable>` component + `useAskable()` hook | ~0.5kb gz |
+| [`@askable-ui/vue`](./packages/vue) | TS | `<Askable>` component + `useAskable()` composable | ~0.5kb gz |
+| [`@askable-ui/svelte`](./packages/svelte) | TS | `<Askable>` component + `createAskableStore()` | ~0.5kb gz |
 | [`askable-streamlit`](./packages/python/streamlit) | Python | Streamlit custom component — returns focus as Python dict | — |
 | [`askable-django`](./packages/python/django) | Python | Template tags + auto-inject middleware | — |
 
