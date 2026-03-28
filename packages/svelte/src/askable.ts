@@ -1,6 +1,6 @@
 import { writable, derived, readonly } from 'svelte/store';
-import { createAskableContext } from '@askable/core';
-import type { AskableFocus, AskableContext } from '@askable/core';
+import { createAskableContext } from '@askable-ui/core';
+import type { AskableFocus, AskableContext } from '@askable-ui/core';
 
 export interface AskableStore {
   focus: ReturnType<typeof readonly>;

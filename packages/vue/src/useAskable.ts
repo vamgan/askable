@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { createAskableContext } from '@askable/core';
-import type { AskableFocus, AskableContext } from '@askable/core';
+import { createAskableContext } from '@askable-ui/core';
+import type { AskableFocus, AskableContext } from '@askable-ui/core';
 
 let globalCtx: AskableContext | null = null;
 let refCount = 0;
