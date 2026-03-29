@@ -360,7 +360,7 @@
 <nav>
   <a href="#" class="nav-logo">
     <div class="nav-icon">A</div>
-    askable<span>-ui</span>
+    askable-ui
   </a>
   <div class="nav-links">
     <a href="#demo" class="nav-link">Demo</a>
@@ -554,66 +554,112 @@
   </div>
 </footer>
 
-<script type="module">
-  import { createAskableContext } from './lib/askable.js';
+<script>
+(function() {
+  // --- Inline askable-ui/core ---
+  function parseMeta(raw) { try { return JSON.parse(raw); } catch { return raw; } }
+  function extractText(el) { var t = (el.textContent || '').trim(); return t.length > 200 ? t.slice(0,200) : t; }
 
-  const ctx = createAskableContext();
-  const messagesEl  = document.getElementById('chat-messages');
-  const chatInput   = document.getElementById('chat-input');
-  const chatSend    = document.getElementById('chat-send');
-  const codeAttr    = document.getElementById('code-attr');
-  const codeCtx     = document.getElementById('code-ctx');
+  function AskableObserver(onFocus) {
+    this.boundElements = [];
+    this.onFocus = onFocus;
+    var self = this;
+    this.handler = function(e) {
+      var el = e.currentTarget;
+      var raw = el.getAttribute('data-askable');
+      if (!raw) return;
+      onFocus({ meta: parseMeta(raw), text: extractText(el), element: el, timestamp: Date.now() });
+    };
+  }
+  AskableObserver.prototype.observe = function(root) {
+    var self = this;
+    var els = (root === document ? document.documentElement : root).querySelectorAll('[data-askable]');
+    els.forEach(function(el) { self.attach(el); });
+  };
+  AskableObserver.prototype.attach = function(el) {
+    el.addEventListener('mouseenter', this.handler);
+    el.addEventListener('click', this.handler);
+    el.addEventListener('focus', this.handler);
+    this.boundElements.push(el);
+  };
 
-  let activeEl     = null;
-  let typingTimer  = null;
-  let lastKey      = null;
-  let mode         = 'hover'; // 'hover' | 'click'
-  let lastEventType = null;
+  function AskableCtx() {
+    var self = this;
+    this.currentFocus = null;
+    this.listeners = [];
+    this.observer = new AskableObserver(function(focus) {
+      self.currentFocus = focus;
+      self.listeners.forEach(function(fn) { fn(focus); });
+    });
+  }
+  AskableCtx.prototype.observe = function(root) { this.observer.observe(root); };
+  AskableCtx.prototype.on = function(ev, fn) { if (ev === 'focus') this.listeners.push(fn); };
+  AskableCtx.prototype.toPromptContext = function() {
+    var focus = this.currentFocus;
+    if (!focus) return 'No UI element is currently focused.';
+    var meta = focus.meta;
+    var metaStr = typeof meta === 'string' ? meta :
+      Object.keys(meta).map(function(k) { return k + ': ' + meta[k]; }).join(', ');
+    var parts = ['User is focused on:'];
+    if (metaStr) parts.push(metaStr);
+    if (focus.text) parts.push('value "' + focus.text + '"');
+    return parts.join(' — ');
+  };
 
-  // Observe once — library fires on hover + click + focus
+  // --- Demo ---
+  var ctx = new AskableCtx();
+  var messagesEl = document.getElementById('chat-messages');
+  var chatInput  = document.getElementById('chat-input');
+  var chatSend   = document.getElementById('chat-send');
+  var codeAttr   = document.getElementById('code-attr');
+  var codeCtx    = document.getElementById('code-ctx');
+
+  var activeEl      = null;
+  var typingTimer   = null;
+  var lastKey       = null;
+  var mode          = 'hover';
+  var lastEventType = null;
+
   ctx.observe(document);
 
-  // Track last interaction type so the toggle can filter
-  document.querySelectorAll('[data-askable]').forEach(el => {
-    el.addEventListener('mouseenter', () => { lastEventType = 'hover'; });
-    el.addEventListener('click',      () => { lastEventType = 'click'; });
+  document.querySelectorAll('[data-askable]').forEach(function(el) {
+    el.addEventListener('mouseenter', function() { lastEventType = 'hover'; });
+    el.addEventListener('click',      function() { lastEventType = 'click'; });
   });
 
-  // Toggle just switches the filter mode
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      mode = btn.dataset.mode;
-      lastKey = null; // reset so next interaction fires fresh
+      mode = btn.getAttribute('data-mode');
+      lastKey = null;
     });
   });
 
-  // --- Responses ---
-  const responses = {
+  var responses = {
     revenue:     "Up 12.4% — $128,400 MRR. On track.",
     churn:       "3.2% churn, down 0.8pp. Below the ~5% benchmark.",
     arpu:        "ARPU slipped to $42.10 (-2.1%). Check plan mix.",
     nps:         "NPS 67, well above the 44 industry avg.",
-    account_row: (m) => {
-      if (m.status === 'at_risk')   return `${m.company}: no login for ${m.last_login}. Reach out this week.`;
-      if (m.status === 'churned')   return `${m.company} churned Oct 1. Win-back candidate.`;
-      if (m.growth === 'expanding') return `${m.company}: expansion signal. Upsell to Business adds ~$3k MRR.`;
-      return `${m.company}: healthy at ${m.mrr} MRR. Good QBR story.`;
-    },
+    account_row: function(m) {
+      if (m.status === 'at_risk')   return m.company + ': no login for ' + m.last_login + '. Reach out this week.';
+      if (m.status === 'churned')   return m.company + ' churned Oct 1. Win-back candidate.';
+      if (m.growth === 'expanding') return m.company + ': expansion signal. Upsell to Business adds ~$3k MRR.';
+      return m.company + ': healthy at ' + m.mrr + ' MRR. Good QBR story.';
+    }
   };
 
   function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
 
   function addMsg(type, text) {
-    const wrap   = document.createElement('div');
-    wrap.className = `msg ${type}`;
-    const bubble = document.createElement('div');
+    var wrap = document.createElement('div');
+    wrap.className = 'msg ' + type;
+    var bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = text;
     wrap.appendChild(bubble);
     if (type !== 'ctx') {
-      const label = document.createElement('span');
+      var label = document.createElement('span');
       label.className = 'msg-label';
       label.textContent = type === 'ai' ? 'Assistant' : 'You';
       wrap.appendChild(label);
@@ -623,84 +669,82 @@
   }
 
   function showTyping() {
-    const el = document.createElement('div');
+    var el = document.createElement('div');
     el.className = 'typing'; el.id = 'typing';
     el.innerHTML = '<span></span><span></span><span></span>';
     messagesEl.appendChild(el);
     scrollBottom();
   }
 
-  function removeTyping() { document.getElementById('typing')?.remove(); }
+  function removeTyping() { var t = document.getElementById('typing'); if (t) t.remove(); }
 
-  // --- askable focus handler ---
-  ctx.on('focus', (focus) => {
+  ctx.on('focus', function(focus) {
     if (mode === 'click' && lastEventType !== 'click') return;
 
-    const meta   = typeof focus.meta === 'string' ? JSON.parse(focus.meta) : focus.meta;
-    const prompt = ctx.toPromptContext();
-    const key    = JSON.stringify(meta);
+    var meta = focus.meta;
+    var prompt = ctx.toPromptContext();
+    var key = JSON.stringify(meta);
     if (key === lastKey) return;
     lastKey = key;
 
-    // Update code panel
-    codeAttr.textContent = `data-askable='${JSON.stringify(meta, null, 2)}'`;
+    codeAttr.textContent = "data-askable='" + JSON.stringify(meta, null, 2) + "'";
     codeAttr.classList.remove('empty');
-    codeCtx.textContent  = prompt;
+    codeCtx.textContent = prompt;
     codeCtx.classList.remove('empty');
 
-    // Highlight element
     if (activeEl) activeEl.classList.remove('active');
     activeEl = focus.element;
     activeEl.classList.add('active');
 
-    // Show context + respond
     clearTimeout(typingTimer);
     removeTyping();
-    addMsg('ctx', `→ ${prompt}`);
+    addMsg('ctx', '→ ' + prompt);
     showTyping();
 
-    typingTimer = setTimeout(() => {
+    typingTimer = setTimeout(function() {
       removeTyping();
-      const r = responses[meta.widget];
-      addMsg('ai', typeof r === 'function' ? r(meta) : (r ?? `Focused on ${meta.widget}.`));
+      var r = responses[meta.widget];
+      addMsg('ai', typeof r === 'function' ? r(meta) : (r || 'Focused on ' + meta.widget + '.'));
     }, 750);
   });
 
-  // --- Chat input ---
   function send() {
-    const text = chatInput.value.trim();
+    var text = chatInput.value.trim();
     if (!text) return;
     chatInput.value = '';
     addMsg('user', text);
     clearTimeout(typingTimer);
     removeTyping();
     showTyping();
-
-    typingTimer = setTimeout(() => {
+    typingTimer = setTimeout(function() {
       removeTyping();
-      const lower = text.toLowerCase();
-      let reply;
-      if (lower.includes('risk'))                       reply = "Globex Inc — no login for 14 days. Reach out.";
-      else if (lower.includes('summar') || lower.includes('overview')) reply = "MRR $128,400 (+12.4%). Churn 3.2% (improving). NPS 67. One at-risk account (Globex). ARPU slightly down.";
-      else if (lower.includes('upsell'))                reply = "Umbrella Ltd on Starter — expansion signals. Best upsell candidate.";
-      else reply = ctx.toPromptContext()
-        ? "I can see your current context. What specifically do you want to know?"
-        : "Hover or click a dashboard element first.";
+      var lower = text.toLowerCase();
+      var reply;
+      if (lower.indexOf('risk') !== -1)
+        reply = "Globex Inc — no login for 14 days. Reach out.";
+      else if (lower.indexOf('summar') !== -1 || lower.indexOf('overview') !== -1)
+        reply = "MRR $128,400 (+12.4%). Churn 3.2% (improving). NPS 67. One at-risk account (Globex). ARPU slightly down.";
+      else if (lower.indexOf('upsell') !== -1)
+        reply = "Umbrella Ltd on Starter — expansion signals. Best upsell candidate.";
+      else
+        reply = ctx.currentFocus
+          ? "I can see your context. What do you want to know?"
+          : "Hover or click a dashboard element first.";
       addMsg('ai', reply);
     }, 900);
   }
 
   chatSend.addEventListener('click', send);
-  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+  chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
 
-  // --- Copy install cmd ---
-  document.getElementById('install-copy').addEventListener('click', () => {
-    navigator.clipboard.writeText('npm install @askable-ui/core').then(() => {
-      const el = document.getElementById('copy-icon');
+  document.getElementById('install-copy').addEventListener('click', function() {
+    navigator.clipboard.writeText('npm install @askable-ui/core').then(function() {
+      var el = document.getElementById('copy-icon');
       el.textContent = '✓ copied';
-      setTimeout(() => el.textContent = '⎘ copy', 2000);
+      setTimeout(function() { el.textContent = '⎘ copy'; }, 2000);
     });
   });
+})();
 </script>
 
 </body>
