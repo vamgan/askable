@@ -58,6 +58,12 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         run: npm run build --workspaces --if-present
 
+      - name: Pack packages
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          mkdir -p release-assets
+          npm pack --workspaces --pack-destination release-assets
+
       - name: Publish packages
         if: steps.version.outputs.changed == 'true'
         run: npm publish --workspaces --access public --provenance
@@ -78,9 +84,28 @@ jobs:
       - name: Create GitHub Release
         if: steps.version.outputs.changed == 'true'
         run: |
-          gh release create "v${{ steps.version.outputs.version }}" \
-            --title "v${{ steps.version.outputs.version }}" \
-            --generate-notes \
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+
+          # Build packages table for release notes header
+          PACKAGES_TABLE="## Packages\n\n"
+          PACKAGES_TABLE+="| Package | Version |\n|---|---|\n"
+          for pkg in core react vue svelte; do
+            PACKAGES_TABLE+="| [\`@askable-ui/$pkg\`](https://www.npmjs.com/package/@askable-ui/$pkg/v/$VERSION) | \`$VERSION\` |\n"
+          done
+
+          # Fetch GitHub's auto-generated changelog
+          CHANGELOG=$(gh api repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name="$TAG" \
+            --jq '.body' 2>/dev/null || echo "")
+
+          # Combine into final notes
+          NOTES=$(printf "%b\n%s" "$PACKAGES_TABLE" "$CHANGELOG")
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$NOTES" \
+            release-assets/*.tgz \
             || echo "Release already exists"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
