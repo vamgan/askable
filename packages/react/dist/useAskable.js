@@ -2,15 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { createAskableContext } from '@askable-ui/core';
 let globalCtx = null;
 let refCount = 0;
-function getGlobalCtx() {
+function getGlobalCtx(events) {
     if (!globalCtx) {
         globalCtx = createAskableContext();
-        globalCtx.observe(document);
+        globalCtx.observe(document, { events });
     }
     return globalCtx;
 }
-export function useAskable() {
-    const ctx = useRef(getGlobalCtx());
+export function useAskable(options) {
+    const ctx = useRef(getGlobalCtx(options?.events));
     const [focus, setFocus] = useState(() => ctx.current.getFocus());
     useEffect(() => {
         refCount++;

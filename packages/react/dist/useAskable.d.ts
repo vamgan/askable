@@ -1,8 +1,10 @@
-import type { AskableFocus, AskableContext } from '@askable-ui/core';
+import type { AskableEvent, AskableFocus, AskableContext } from '@askable-ui/core';
 export interface UseAskableResult {
     focus: AskableFocus | null;
     promptContext: string;
     ctx: AskableContext;
 }
-export declare function useAskable(): UseAskableResult;
+export declare function useAskable(options?: {
+    events?: AskableEvent[];
+}): UseAskableResult;
 //# sourceMappingURL=useAskable.d.ts.map

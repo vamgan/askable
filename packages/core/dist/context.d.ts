@@ -9,6 +9,7 @@ export declare class AskableContextImpl implements AskableContext {
     getFocus(): AskableFocus | null;
     on<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void;
     off<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void;
+    select(element: HTMLElement): void;
     toPromptContext(): string;
     destroy(): void;
 }
