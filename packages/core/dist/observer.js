@@ -14,7 +14,7 @@ function parseMeta(raw) {
 function extractText(el) {
     return (el.textContent ?? '').trim();
 }
-function buildFocus(el) {
+export function buildFocus(el) {
     const raw = el.getAttribute('data-askable');
     if (raw === null)
         return null;
