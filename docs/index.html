@@ -145,11 +145,12 @@
     .eyebrow .spark { color: var(--accent); font-style: normal; }
     .hero-copy h1 {
       font-size: clamp(3rem, 7.5vw, 5.75rem);
-      line-height: .97;
-      letter-spacing: -.065em;
-      font-weight: 860;
+      line-height: 1.01;
+      letter-spacing: -.045em;
+      font-weight: 800;
       margin-bottom: 1.35rem;
-      max-width: 11ch;
+      max-width: 11.4ch;
+      text-wrap: balance;
     }
     .hero-copy h1 em { font-style: normal; color: var(--accent); }
     .hero-copy > p {
@@ -280,11 +281,11 @@
     .toggle-btn { border: none; background: transparent; color: var(--ink-3); padding: .45rem .9rem; border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600; cursor: pointer; transition: background .14s, color .14s; }
     .toggle-btn.active { color: var(--ink); background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.09); }
 
-    .demo-layout { display: grid; grid-template-columns: minmax(0,1fr) 336px; gap: 1.15rem; align-items: start; }
-    .dashboard { display: flex; flex-direction: column; gap: 1rem; }
+    .demo-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 336px); gap: 1.15rem; align-items: start; }
+    .dashboard { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
     .kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
 
-    .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; min-width: 0; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; padding: .88rem 1.1rem; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: .87rem; font-weight: 700; letter-spacing: -.01em; }
     .panel-header span { color: var(--ink-3); font-size: .72rem; font-weight: 500; }
 
@@ -323,13 +324,17 @@
     .button-mode .ask-btn, .button-mode .ask-btn-row { display: inline-flex; }
 
     /* CHAT */
-    .chat-sidebar { position: sticky; top: 4.25rem; display: flex; flex-direction: column; min-height: 540px; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); }
+    .chat-sidebar {
+      position: sticky; top: 4.25rem; display: flex; flex-direction: column;
+      height: clamp(460px, 72vh, 540px); min-height: 460px; max-height: calc(100vh - 5.5rem);
+      min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card);
+    }
     .chat-header { display: flex; align-items: center; gap: .55rem; padding: .88rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .chat-dot { width: .62rem; height: .62rem; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px rgba(22,163,74,0.1); animation: pulse 1.8s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(.85);opacity:.7} }
     .chat-title { font-size: .87rem; font-weight: 700; letter-spacing: -.02em; }
     .chat-sub { margin-left: auto; font-size: .68rem; color: var(--ink-3); }
-    .chat-messages { flex: 1; padding: .88rem; overflow-y: auto; display: flex; flex-direction: column; gap: .6rem; }
+    .chat-messages { flex: 1 1 0; min-height: 0; padding: .88rem; overflow-y: auto; display: flex; flex-direction: column; gap: .6rem; overscroll-behavior: contain; }
     .chat-messages::-webkit-scrollbar { width: 4px; }
     .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 999px; }
     .msg { display: flex; flex-direction: column; gap: .24rem; animation: fadeUp .2s ease; }
@@ -402,7 +407,7 @@
       .hero-stage { min-height: 0; }
       .hero-card { position: relative; top: auto; }
       .demo-layout { grid-template-columns: 1fr; }
-      .chat-sidebar { position: relative; top: auto; min-height: 460px; }
+      .chat-sidebar { position: relative; top: auto; height: 480px; max-height: none; }
       .insight-grid, .steps { grid-template-columns: 1fr 1fr; }
       .pkg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -413,6 +418,50 @@
       .hero { padding-top: 3.5rem; }
       .lens-grid, .code-panel, .kpi-grid { grid-template-columns: 1fr; }
       .insight-grid, .steps, .pkg-grid { grid-template-columns: 1fr; }
+      .deck { padding: 1rem; border-radius: 24px; }
+      .demo-controls { align-items: stretch; }
+      .toggle-group { width: 100%; justify-content: stretch; }
+      .toggle-btn { flex: 1 1 0; padding-inline: .65rem; }
+      .panel { overflow: visible; }
+      .panel-header { flex-direction: column; align-items: flex-start; gap: .2rem; }
+      .chat-sidebar { height: 430px; min-height: 430px; }
+      .chat-header, .chat-input-row, .chat-context-bar { padding-inline: .78rem; }
+      table, thead, tbody, tr, th, td { display: block; }
+      thead { display: none; }
+      tbody { display: grid; gap: .75rem; padding: .9rem; }
+      tbody tr[data-askable] {
+        display: grid;
+        gap: .55rem;
+        padding: .9rem;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 18px;
+        background: #fff;
+      }
+      tbody tr[data-askable].active { box-shadow: inset 3px 0 0 var(--accent); }
+      td {
+        display: grid;
+        grid-template-columns: minmax(0, 92px) minmax(0, 1fr);
+        gap: .75rem;
+        align-items: center;
+        padding: 0;
+        border: none;
+        min-width: 0;
+      }
+      td::before {
+        content: attr(data-label);
+        color: var(--ink-3);
+        font-size: .66rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      td:last-child {
+        grid-template-columns: 1fr;
+        justify-items: start;
+        padding-top: .15rem;
+      }
+      td:last-child::before { display: none; }
+      .ask-btn-row { font-size: .68rem; padding: .38rem .72rem; }
       .cta-card { padding: 3rem 1.5rem; }
       .section { padding-top: 4rem; }
       footer { flex-direction: column; align-items: flex-start; }
@@ -602,7 +651,7 @@ User is focused on: company: Globex Inc, status: at_risk, last_login: 14 days ag
 
     <section id="how" class="section">
       <p class="section-label">How it works</p>
-      <h2 class="section-title">Three quiet steps.</h2>
+      <h2 class="section-title">Three simple steps.</h2>
       <p class="section-sub">No giant framework. No invasive serialization. Let the model borrow the user's focus.</p>
       <div class="steps">
         <article class="step">
@@ -795,9 +844,9 @@ User is focused on: company: Globex Inc, status: at_risk, last_login: 14 days ag
       if (d.growth) meta.growth = d.growth;
       var tr = document.createElement('tr'); tr.tabIndex = 0;
       tr.setAttribute('data-askable', JSON.stringify(meta));
-      tr.innerHTML = '<td>' + d.company + '</td><td>' + d.mrr + '</td><td>' + d.plan + '</td>' +
-        '<td><span class="badge ' + statusBadge[d.status] + '">' + statusLabel[d.status] + '</span></td>' +
-        '<td style="width:1px"><button class="ask-btn-row">✦ Ask AI</button></td>';
+      tr.innerHTML = '<td data-label="Company">' + d.company + '</td><td data-label="MRR">' + d.mrr + '</td><td data-label="Plan">' + d.plan + '</td>' +
+        '<td data-label="Status"><span class="badge ' + statusBadge[d.status] + '">' + statusLabel[d.status] + '</span></td>' +
+        '<td data-label="Ask" style="width:1px"><button class="ask-btn-row">✦ Ask AI</button></td>';
       tbody.appendChild(tr);
     });
     var askable = new Ctx();
@@ -914,7 +963,7 @@ User is focused on: company: Globex Inc, status: at_risk, last_login: 14 days ag
     if (!ctx) return;
     var dots = [];
     var mouse = { x: window.innerWidth * 0.72, y: 220 };
-    var spacing = 36; var influence = 160; var ease = 0.07;
+    var spacing = 30; var influence = 235; var ease = 0.078;
     function resize() {
       canvas.width = window.innerWidth; canvas.height = window.innerHeight; dots = [];
       for (var y = spacing / 2; y < canvas.height; y += spacing)
@@ -928,12 +977,12 @@ User is focused on: company: Globex Inc, status: at_risk, last_login: 14 days ag
         var dx = mouse.x - d.ox; var dy = mouse.y - d.oy;
         var dist = Math.sqrt(dx * dx + dy * dy) || 1;
         var force = Math.max(0, 1 - dist / influence);
-        var pull = force * 20;
+        var pull = force * 30;
         d.x += ((d.ox + dx / dist * pull) - d.x) * ease;
         d.y += ((d.oy + dy / dist * pull) - d.y) * ease;
-        var alpha = force > 0.05 ? 0.08 + force * 0.28 : 0.048;
-        var size = force > 0.02 ? 2.1 : 1.05;
-        ctx.fillStyle = force > 0.05 ? 'rgba(79,70,229,' + alpha + ')' : 'rgba(0,0,0,' + alpha + ')';
+        var alpha = force > 0.04 ? 0.1 + force * 0.32 : 0.06;
+        var size = force > 0.02 ? 2.8 + force * 1.8 : 1.3;
+        ctx.fillStyle = force > 0.04 ? 'rgba(79,70,229,' + alpha + ')' : 'rgba(0,0,0,' + alpha + ')';
         ctx.beginPath(); ctx.arc(d.x, d.y, size, 0, Math.PI * 2); ctx.fill();
       }
       requestAnimationFrame(draw);
