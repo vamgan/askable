@@ -1,11 +1,11 @@
 import { Injectable, OnDestroy, signal, computed, PLATFORM_ID, Inject } from '@angular/core';
 import { createAskableContext } from '@askable-ui/core';
+import type { AskableContext, AskableFocus, AskableObserveOptions } from '@askable-ui/core';
 
 // Inline the browser check — avoids importing @angular/common which requires the JIT compiler
 function isBrowserPlatform(platformId: object): boolean {
-  return platformId === 'browser';
+  return (platformId as unknown as string) === 'browser';
 }
-import type { AskableContext, AskableEvent, AskableFocus, AskableObserveOptions } from '@askable-ui/core';
 
 @Injectable({ providedIn: 'root' })
 export class AskableService implements OnDestroy {
