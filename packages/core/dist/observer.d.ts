@@ -7,8 +7,10 @@ export declare class Observer {
     private boundElements;
     private onFocus;
     private activeEvents;
+    private hoverDebounce;
+    private hoverTimer;
     constructor(onFocus: FocusCallback);
-    observe(root: HTMLElement | Document, events?: AskableEvent[]): void;
+    observe(root: HTMLElement | Document, events?: AskableEvent[], hoverDebounce?: number): void;
     unobserve(): void;
     private handleInteraction;
     private attach;

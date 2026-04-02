@@ -3,6 +3,11 @@ const EVENT_MAP = {
     hover: 'mouseenter',
     focus: 'focus',
 };
+function isBrowser() {
+    return (typeof window !== 'undefined' &&
+        typeof document !== 'undefined' &&
+        typeof MutationObserver !== 'undefined');
+}
 function parseMeta(raw) {
     try {
         return JSON.parse(raw);
@@ -32,19 +37,45 @@ export class Observer {
         this.mutationObserver = null;
         this.boundElements = new Set();
         this.activeEvents = ALL_EVENTS;
+        this.hoverDebounce = 0;
+        this.hoverTimer = null;
         this.handleInteraction = (event) => {
             const el = event.currentTarget;
+            // Nested element priority: when a click/hover reaches a parent [data-askable],
+            // check if the actual target is inside a closer (nested) askable descendant that
+            // is also bound. If so, skip — the inner element takes precedence.
+            const target = event.target;
+            if (target !== el) {
+                const closer = target.closest('[data-askable]');
+                if (closer && closer !== el && el.contains(closer))
+                    return;
+            }
+            const isHover = event.type === 'mouseenter';
+            if (isHover && this.hoverDebounce > 0) {
+                if (this.hoverTimer !== null)
+                    clearTimeout(this.hoverTimer);
+                this.hoverTimer = setTimeout(() => {
+                    this.hoverTimer = null;
+                    const focus = buildFocus(el);
+                    if (focus)
+                        this.onFocus(focus);
+                }, this.hoverDebounce);
+                return;
+            }
             const focus = buildFocus(el);
             if (focus)
                 this.onFocus(focus);
         };
         this.onFocus = onFocus;
     }
-    observe(root, events = ALL_EVENTS) {
+    observe(root, events = ALL_EVENTS, hoverDebounce = 0) {
+        if (!isBrowser())
+            return;
         if (this.root)
             this.unobserve();
         this.root = root;
         this.activeEvents = events;
+        this.hoverDebounce = hoverDebounce;
         const rootEl = root instanceof Document ? root.documentElement : root;
         rootEl.querySelectorAll('[data-askable]').forEach((el) => this.attach(el));
         this.mutationObserver = new MutationObserver((mutations) => {
@@ -70,6 +101,10 @@ export class Observer {
         this.boundElements.forEach((el) => this.detach(el));
         this.boundElements.clear();
         this.root = null;
+        if (this.hoverTimer !== null) {
+            clearTimeout(this.hoverTimer);
+            this.hoverTimer = null;
+        }
     }
     attach(el) {
         if (this.boundElements.has(el))
