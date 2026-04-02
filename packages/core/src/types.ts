@@ -11,6 +11,8 @@ export interface AskableFocus {
 
 export type AskableEventMap = {
   focus: AskableFocus;
+  /** Fires when clear() is called — focus has been reset to null */
+  clear: null;
 };
 
 export type AskableEventName = keyof AskableEventMap;
@@ -24,6 +26,12 @@ export type AskableEvent = 'click' | 'hover' | 'focus';
 export interface AskableObserveOptions {
   /** Which interaction types trigger context updates. Defaults to all: ['click', 'hover', 'focus'] */
   events?: AskableEvent[];
+  /**
+   * Debounce delay in ms applied to hover (mouseenter) events.
+   * Prevents rapid context switches when the user moves the cursor across many elements.
+   * Defaults to 0 (no debounce).
+   */
+  hoverDebounce?: number;
 }
 
 export type AskablePromptFormat = 'natural' | 'json';
@@ -58,12 +66,16 @@ export interface AskableContext {
   unobserve(): void;
   /** Get the current focus context */
   getFocus(): AskableFocus | null;
+  /** Return the focus history, newest first. Optional limit caps the result. */
+  getHistory(limit?: number): AskableFocus[];
   /** Subscribe to an event */
   on<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void;
   /** Unsubscribe from an event */
   off<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void;
   /** Programmatically select an element — use for explicit "Ask AI" buttons */
   select(element: HTMLElement): void;
+  /** Reset the current focus to null and emit a 'clear' event */
+  clear(): void;
   /** Serialize current focus to structured prompt-ready data */
   serializeFocus(options?: AskablePromptContextOptions): AskableSerializedFocus | null;
   /** Serialize current focus to a prompt-ready string */

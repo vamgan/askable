@@ -266,4 +266,81 @@ describe('createAskableContext', () => {
 
     cleanup(el);
   });
+
+  it('clear() resets focus to null and emits clear event', () => {
+    const el = makeEl({ widget: 'chart' }, 'Chart');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    el.click();
+    expect(ctx.getFocus()).not.toBeNull();
+
+    const clearHandler = vi.fn();
+    ctx.on('clear', clearHandler);
+    ctx.clear();
+
+    expect(ctx.getFocus()).toBeNull();
+    expect(clearHandler).toHaveBeenCalledOnce();
+    expect(clearHandler.mock.calls[0][0]).toBeNull();
+
+    ctx.destroy();
+    cleanup(el);
+  });
+
+  it('getHistory() returns focuses in newest-first order', () => {
+    const el1 = makeEl({ id: 'a' }, 'A');
+    const el2 = makeEl({ id: 'b' }, 'B');
+    const el3 = makeEl({ id: 'c' }, 'C');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    el1.click();
+    el2.click();
+    el3.click();
+
+    const history = ctx.getHistory();
+    expect(history).toHaveLength(3);
+    expect((history[0].meta as Record<string, unknown>).id).toBe('c');
+    expect((history[1].meta as Record<string, unknown>).id).toBe('b');
+    expect((history[2].meta as Record<string, unknown>).id).toBe('a');
+
+    ctx.destroy();
+    cleanup(el1);
+    cleanup(el2);
+    cleanup(el3);
+  });
+
+  it('getHistory() respects the limit argument', () => {
+    const el1 = makeEl({ id: 'a' }, 'A');
+    const el2 = makeEl({ id: 'b' }, 'B');
+    const el3 = makeEl({ id: 'c' }, 'C');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    el1.click();
+    el2.click();
+    el3.click();
+
+    const history = ctx.getHistory(2);
+    expect(history).toHaveLength(2);
+    expect((history[0].meta as Record<string, unknown>).id).toBe('c');
+
+    ctx.destroy();
+    cleanup(el1);
+    cleanup(el2);
+    cleanup(el3);
+  });
+
+  it('observe() is a no-op when called outside a browser environment', () => {
+    // Simulate SSR by temporarily hiding window
+    const win = globalThis.window;
+    Object.defineProperty(globalThis, 'window', { value: undefined, configurable: true });
+
+    const ctx = createAskableContext();
+    expect(() => ctx.observe(document)).not.toThrow();
+    expect(ctx.getFocus()).toBeNull();
+
+    Object.defineProperty(globalThis, 'window', { value: win, configurable: true });
+    ctx.destroy();
+  });
 });

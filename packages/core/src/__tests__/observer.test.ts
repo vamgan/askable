@@ -114,4 +114,54 @@ describe('Observer', () => {
     el.click();
     expect(onFocus).toHaveBeenCalledOnce();
   });
+
+  it('nested elements: innermost [data-askable] wins on click', () => {
+    const outer = attach(makeEl({ level: 'outer' }, ''));
+    const inner = makeEl({ level: 'inner' }, 'Inner text');
+    outer.appendChild(inner);
+    elements.push(inner);
+
+    const onFocus = vi.fn();
+    const obs = new Observer(onFocus);
+    obs.observe(document);
+
+    inner.click();
+
+    expect(onFocus).toHaveBeenCalledOnce();
+    expect((onFocus.mock.calls[0][0].meta as Record<string, unknown>).level).toBe('inner');
+
+    obs.unobserve();
+  });
+
+  it('hover debounce: does not fire immediately', async () => {
+    const el = attach(makeEl({ id: 'debounce-test' }, 'Hover'));
+    const onFocus = vi.fn();
+    const obs = new Observer(onFocus);
+    obs.observe(document, ['hover'], 50);
+
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    expect(onFocus).not.toHaveBeenCalled();
+
+    await new Promise((r) => setTimeout(r, 60));
+    expect(onFocus).toHaveBeenCalledOnce();
+
+    obs.unobserve();
+  });
+
+  it('hover debounce: rapid hovers only fire once', async () => {
+    const el = attach(makeEl({ id: 'rapid-hover' }, 'Rapid'));
+    const onFocus = vi.fn();
+    const obs = new Observer(onFocus);
+    obs.observe(document, ['hover'], 50);
+
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    expect(onFocus).not.toHaveBeenCalled();
+
+    await new Promise((r) => setTimeout(r, 60));
+    expect(onFocus).toHaveBeenCalledOnce();
+
+    obs.unobserve();
+  });
 });

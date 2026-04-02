@@ -10,20 +10,25 @@ import type {
   AskableSerializedFocus,
 } from './types.js';
 
+const MAX_HISTORY = 50;
+
 export class AskableContextImpl implements AskableContext {
   private emitter = new Emitter();
   private observer: Observer;
   private currentFocus: AskableFocus | null = null;
+  private history: AskableFocus[] = [];
 
   constructor() {
     this.observer = new Observer((focus) => {
       this.currentFocus = focus;
+      this.history.push(focus);
+      if (this.history.length > MAX_HISTORY) this.history.shift();
       this.emitter.emit('focus', focus);
     });
   }
 
   observe(root: HTMLElement | Document, options?: AskableObserveOptions): void {
-    this.observer.observe(root, options?.events);
+    this.observer.observe(root, options?.events, options?.hoverDebounce ?? 0);
   }
 
   unobserve(): void {
@@ -32,6 +37,11 @@ export class AskableContextImpl implements AskableContext {
 
   getFocus(): AskableFocus | null {
     return this.currentFocus;
+  }
+
+  getHistory(limit?: number): AskableFocus[] {
+    const hist = this.history.slice().reverse();
+    return limit !== undefined ? hist.slice(0, limit) : hist;
   }
 
   on<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void {
@@ -46,8 +56,15 @@ export class AskableContextImpl implements AskableContext {
     const focus = buildFocus(element);
     if (focus) {
       this.currentFocus = focus;
+      this.history.push(focus);
+      if (this.history.length > MAX_HISTORY) this.history.shift();
       this.emitter.emit('focus', focus);
     }
+  }
+
+  clear(): void {
+    this.currentFocus = null;
+    this.emitter.emit('clear', null);
   }
 
   serializeFocus(options?: AskablePromptContextOptions): AskableSerializedFocus | null {
@@ -98,6 +115,7 @@ export class AskableContextImpl implements AskableContext {
     this.observer.unobserve();
     this.emitter.clear();
     this.currentFocus = null;
+    this.history = [];
   }
 
   private normalizeMeta(

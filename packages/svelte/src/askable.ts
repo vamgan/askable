@@ -15,6 +15,7 @@ export function createAskableStore(options?: { events?: AskableEvent[] }) {
 
   const _focus = writable<AskableFocus | null>(null);
   ctx.on('focus', (f) => _focus.set(f));
+  ctx.on('clear', () => _focus.set(null));
 
   const focus = readonly(_focus);
   const promptContext = derived(_focus, () => ctx.toPromptContext());

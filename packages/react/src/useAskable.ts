@@ -35,10 +35,13 @@ export function useAskable(options?: {
     }
 
     const handler = (f: AskableFocus) => setFocus(f);
+    const clearHandler = () => setFocus(null);
     current.on('focus', handler);
+    current.on('clear', clearHandler);
 
     return () => {
       current.off('focus', handler);
+      current.off('clear', clearHandler);
       if (!usesProvidedCtx) {
         refCount--;
         if (refCount === 0) {
