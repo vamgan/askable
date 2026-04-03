@@ -1,0 +1,134 @@
+import { Emitter } from './emitter.js';
+import { buildFocus, Observer } from './observer.js';
+import type {
+  AskableContext,
+  AskableEventHandler,
+  AskableEventName,
+  AskableFocus,
+  AskableObserveOptions,
+  AskablePromptContextOptions,
+  AskableSerializedFocus,
+} from './types.js';
+
+export class AskableContextImpl implements AskableContext {
+  private emitter = new Emitter();
+  private observer: Observer;
+  private currentFocus: AskableFocus | null = null;
+
+  constructor() {
+    this.observer = new Observer((focus) => {
+      this.currentFocus = focus;
+      this.emitter.emit('focus', focus);
+    });
+  }
+
+  observe(root: HTMLElement | Document, options?: AskableObserveOptions): void {
+    this.observer.observe(root, options?.events, options?.hoverDebounce ?? 0);
+  }
+
+  unobserve(): void {
+    this.observer.unobserve();
+  }
+
+  getFocus(): AskableFocus | null {
+    return this.currentFocus;
+  }
+
+  on<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void {
+    this.emitter.on(event, handler);
+  }
+
+  off<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void {
+    this.emitter.off(event, handler);
+  }
+
+  select(element: HTMLElement): void {
+    const focus = buildFocus(element);
+    if (focus) {
+      this.currentFocus = focus;
+      this.emitter.emit('focus', focus);
+    }
+  }
+
+  clear(): void {
+    this.currentFocus = null;
+    this.emitter.emit('clear', null);
+  }
+
+  serializeFocus(options?: AskablePromptContextOptions): AskableSerializedFocus | null {
+    const focus = this.currentFocus;
+    if (!focus) return null;
+
+    const includeText = options?.includeText ?? true;
+    const maxTextLength = options?.maxTextLength;
+
+    const meta = typeof focus.meta === 'string'
+      ? focus.meta
+      : this.normalizeMeta(focus.meta, options);
+
+    const text = includeText ? this.normalizeText(focus.text, maxTextLength) : '';
+
+    return {
+      meta,
+      ...(text ? { text } : {}),
+      timestamp: focus.timestamp,
+    };
+  }
+
+  toPromptContext(options?: AskablePromptContextOptions): string {
+    const format = options?.format ?? 'natural';
+    const serialized = this.serializeFocus(options);
+
+    if (!serialized) return format === 'json' ? 'null' : 'No UI element is currently focused.';
+
+    if (format === 'json') {
+      return JSON.stringify(serialized);
+    }
+
+    const textLabel = options?.textLabel ?? 'value';
+    const prefix = options?.prefix ?? 'User is focused on:';
+
+    const metaStr = typeof serialized.meta === 'string'
+      ? serialized.meta
+      : Object.entries(serialized.meta).map(([k, v]) => `${k}: ${String(v)}`).join(', ');
+
+    const parts: string[] = [prefix];
+    if (metaStr) parts.push(metaStr);
+    if (serialized.text) parts.push(`${textLabel} "${serialized.text}"`);
+
+    return parts.join(' — ');
+  }
+
+  destroy(): void {
+    this.observer.unobserve();
+    this.emitter.clear();
+    this.currentFocus = null;
+  }
+
+  private normalizeMeta(
+    meta: Record<string, unknown>,
+    options?: AskablePromptContextOptions
+  ): Record<string, unknown> {
+    const exclude = new Set(options?.excludeKeys ?? []);
+    const entries = Object.entries(meta).filter(([key]) => !exclude.has(key));
+    const keyOrder = options?.keyOrder ?? [];
+
+    if (keyOrder.length === 0) return Object.fromEntries(entries);
+
+    const ordered = [...entries].sort(([a], [b]) => {
+      const ai = keyOrder.indexOf(a);
+      const bi = keyOrder.indexOf(b);
+      const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+      const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+      if (aRank !== bRank) return aRank - bRank;
+      return 0;
+    });
+
+    return Object.fromEntries(ordered);
+  }
+
+  private normalizeText(text: string, maxTextLength?: number): string {
+    if (maxTextLength === undefined) return text;
+    return text.slice(0, Math.max(0, maxTextLength));
+  }
+}

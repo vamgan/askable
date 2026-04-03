@@ -1,0 +1,54 @@
+{
+  "name": "@askable-ui/svelte",
+  "version": "0.1.4",
+  "description": "Svelte 4 bindings for askable — LLM-aware UI context",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./Askable.svelte": "./src/Askable.svelte"
+  },
+  "files": [
+    "dist",
+    "src/Askable.svelte",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/askable-ui/askable.git",
+    "directory": "packages/svelte"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "llm",
+    "context",
+    "svelte",
+    "svelte4",
+    "ui",
+    "focus"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "svelte": "^4.0.0"
+  },
+  "dependencies": {
+    "@askable-ui/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@askable-ui/core": "*",
+    "@sveltejs/vite-plugin-svelte": "^3.1.0",
+    "@testing-library/svelte": "^4.2.3",
+    "jsdom": "^25.0.0",
+    "svelte": "^4.2.18",
+    "typescript": "^5.4.5",
+    "vitest": "^2.0.0"
+  }
+}

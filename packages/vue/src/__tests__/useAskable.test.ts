@@ -1,0 +1,105 @@
+import { describe, it, expect, afterEach } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
+import { defineComponent, nextTick } from 'vue';
+import { useAskable } from '../useAskable.js';
+import { track } from './helpers.js';
+
+/** Flush MutationObserver microtasks AND Vue's async queue. */
+async function flushAll() {
+  await flushPromises();
+  await new Promise((r) => setTimeout(r, 0));
+  await nextTick();
+}
+
+const Consumer = defineComponent({
+  name: 'Consumer',
+  setup() {
+    const { focus, promptContext } = useAskable();
+    return { focus, promptContext };
+  },
+  template: `
+    <div>
+      <div
+        data-testid="askable-target"
+        data-askable='{"metric":"revenue","period":"Q3","value":"$2.3M"}'
+      >Revenue: $2.3M</div>
+      <span data-testid="focus-meta">{{ focus ? JSON.stringify(focus.meta) : 'null' }}</span>
+      <span data-testid="prompt-context">{{ promptContext }}</span>
+    </div>
+  `,
+});
+
+describe('useAskable (Vue)', () => {
+  it('returns null focus initially', async () => {
+    const wrapper = track(mount(Consumer, { attachTo: document.body }));
+    await flushAll();
+    expect(wrapper.find('[data-testid="focus-meta"]').text()).toBe('null');
+  });
+
+  it('returns the no-focus prompt string initially', async () => {
+    const wrapper = track(mount(Consumer, { attachTo: document.body }));
+    await flushAll();
+    expect(wrapper.find('[data-testid="prompt-context"]').text()).toBe(
+      'No UI element is currently focused.'
+    );
+  });
+
+  it('updates focus after a click on a [data-askable] element', async () => {
+    const wrapper = track(mount(Consumer, { attachTo: document.body }));
+    // Flush MutationObserver so click listener is attached
+    await flushAll();
+
+    expect(wrapper.find('[data-testid="focus-meta"]').text()).toBe('null');
+
+    await wrapper.find('[data-testid="askable-target"]').trigger('click');
+    await nextTick();
+
+    const metaText = wrapper.find('[data-testid="focus-meta"]').text();
+    expect(metaText).not.toBe('null');
+    const meta = JSON.parse(metaText);
+    expect(meta).toEqual({ metric: 'revenue', period: 'Q3', value: '$2.3M' });
+  });
+
+  it('promptContext is non-empty string after focus', async () => {
+    const wrapper = track(mount(Consumer, { attachTo: document.body }));
+    await flushAll();
+
+    await wrapper.find('[data-testid="askable-target"]').trigger('click');
+    await nextTick();
+
+    const prompt = wrapper.find('[data-testid="prompt-context"]').text();
+    expect(prompt).not.toBe('No UI element is currently focused.');
+    expect(prompt).toContain('User is focused on');
+    expect(prompt).toContain('revenue');
+  });
+
+  it('cleans up listener on unmount', async () => {
+    const wrapper = track(mount(Consumer, { attachTo: document.body }));
+    await flushAll();
+
+    // Click once to set focus
+    await wrapper.find('[data-testid="askable-target"]').trigger('click');
+    await nextTick();
+    expect(wrapper.find('[data-testid="focus-meta"]').text()).not.toBe('null');
+
+    // Unmount — should destroy ctx when refCount hits 0
+    wrapper.unmount();
+
+    // After destroy, getFocus on a new ctx should be null
+    const { useAskable: ua } = await import('../useAskable.js');
+    const wrapper2 = track(
+      mount(
+        defineComponent({
+          setup() {
+            const { focus } = ua();
+            return { focus };
+          },
+          template: `<span>{{ focus ? 'has-focus' : 'null' }}</span>`,
+        }),
+        { attachTo: document.body }
+      )
+    );
+    await flushAll();
+    expect(wrapper2.text()).toBe('null');
+  });
+});

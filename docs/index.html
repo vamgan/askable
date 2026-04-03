@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>askable-ui — UI context your model can actually use</title>
+  <meta name="description" content="Mark any element with data-askable and turn visible UI state into usable LLM context. React, Vue, Svelte, Django, Streamlit, or plain HTML." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23111317'/><text x='16' y='22' font-family='system-ui,sans-serif' font-size='18' font-weight='900' fill='white' text-anchor='middle'>✦</text></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --ink: #111317;
+      --ink-2: #45474d;
+      --ink-3: #8a8f98;
+      --line: rgba(0,0,0,0.08);
+      --line-strong: rgba(0,0,0,0.14);
+      --accent: #4f46e5;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #d97706;
+      --radius-pill: 9999px;
+      --radius-card: 24px;
+      --radius-lg: 32px;
+      --font: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #field-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: 52px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(10px) saturate(1.4);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .nav-logo {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -.04em;
+    }
+    .nav-logo .spark { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: .3rem; }
+    .nav-link {
+      text-decoration: none;
+      color: var(--ink-3);
+      font-size: .84rem;
+      font-weight: 500;
+      padding: .38rem .72rem;
+      border-radius: var(--radius-pill);
+      transition: color .15s, background .15s;
+    }
+    .nav-link:hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+    .nav-gh {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .42rem 1rem;
+      border-radius: var(--radius-pill);
+      background: var(--ink);
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: .5rem;
+      transition: opacity .15s;
+    }
+    .nav-gh:hover { opacity: .82; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: .78rem 1.5rem;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .15s, opacity .15s, box-shadow .15s;
+      letter-spacing: -.01em;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--ink); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.14); }
+    .btn-primary:hover { box-shadow: 0 6px 22px rgba(0,0,0,0.2); }
+    .btn-secondary { background: rgba(0,0,0,0.04); color: var(--ink); border: 1px solid rgba(0,0,0,0.09); }
+    .btn-secondary:hover { background: rgba(0,0,0,0.07); }
+
+    /* LAYOUT */
+    .page-shell { max-width: 1280px; margin: 0 auto; padding: 0 2rem 8rem; }
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 3rem;
+      align-items: center;
+      padding: 7rem 0 5rem;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .85rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(0,0,0,0.03);
+      color: var(--ink-3);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 1.35rem;
+      width: fit-content;
+    }
+    .eyebrow .spark { color: var(--accent); font-style: normal; }
+    .hero-copy h1 {
+      font-size: clamp(3rem, 7.5vw, 5.75rem);
+      line-height: 1.06;
+      letter-spacing: -.025em;
+      font-weight: 750;
+      margin-bottom: 1.35rem;
+      max-width: 11.4ch;
+      text-wrap: balance;
+    }
+    .hero-copy h1 em { font-style: normal; color: var(--accent); }
+    .hero-copy > p {
+      max-width: 36rem;
+      font-size: 1.05rem;
+      line-height: 1.68;
+      color: var(--ink-2);
+      margin-bottom: 2rem;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-bottom: 1.5rem; }
+    .install-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      border-radius: var(--radius-pill);
+      padding: .78rem 1.1rem;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.1);
+      font-family: var(--mono);
+      font-size: .79rem;
+      color: var(--ink-2);
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: border-color .15s, transform .15s, box-shadow .15s;
+    }
+    .install-cmd:hover { border-color: rgba(0,0,0,0.18); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
+    .copy-icon { color: var(--ink-3); font-size: .75rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: .82rem; color: var(--ink-3); }
+
+    /* HERO CARD */
+    .hero-stage { position: relative; perspective: 1200px; }
+    .hero-card {
+      position: sticky;
+      top: 4.25rem;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.09);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+      transform-style: preserve-3d;
+      transition: transform .15s ease;
+    }
+    .hero-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .9rem 1rem .78rem;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .hero-window-dots { display: flex; gap: .38rem; }
+    .hero-window-dots span { width: .62rem; height: .62rem; border-radius: 50%; background: #e4e7ec; }
+    .hero-chip {
+      border: 1px solid rgba(0,0,0,0.07);
+      background: rgba(0,0,0,0.03);
+      color: var(--ink-3);
+      border-radius: var(--radius-pill);
+      padding: .28rem .65rem;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      max-width: 13rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .hero-card-body { padding: 1rem; }
+    .lens-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: .85rem; align-items: stretch; }
+
+    .mini-board, .mini-chat, .mini-code {
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,0.07);
+      background: #f9fafb;
+    }
+    .mini-board { padding: .85rem; display: grid; gap: .72rem; min-width: 0; }
+    .mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; min-width: 0; }
+    .mini-stat {
+      border-radius: 12px; padding: .82rem; background: #fff;
+      border: 1px solid rgba(0,0,0,0.07);
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+      min-width: 0; overflow: hidden; cursor: pointer;
+    }
+    .mini-stat.highlight { transform: translateY(-2px); border-color: rgba(79,70,229,0.22); box-shadow: 0 8px 22px rgba(79,70,229,0.09); }
+    .mini-label { color: var(--ink-3); font-size: .66rem; text-transform: uppercase; letter-spacing: .07em; overflow-wrap: anywhere; }
+    .mini-value { font-size: clamp(.92rem, 1.3vw, 1.2rem); font-weight: 800; letter-spacing: -.03em; margin: .18rem 0; line-height: 1.1; overflow-wrap: anywhere; word-break: break-word; }
+    .mini-sub { font-size: .7rem; color: var(--ink-2); overflow-wrap: anywhere; word-break: break-word; }
+    .mini-table { border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); overflow: hidden; }
+    .mini-table-row {
+      display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.8fr);
+      gap: .4rem; padding: .58rem .78rem; font-size: .72rem;
+      border-bottom: 1px solid rgba(0,0,0,0.05); align-items: center;
+    }
+    .mini-table-row > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mini-table-row:last-child { border-bottom: none; }
+    .mini-table-row.is-active { background: rgba(79,70,229,0.05); box-shadow: inset 3px 0 0 var(--accent); }
+    .mini-chat { padding: .85rem; display: flex; flex-direction: column; justify-content: space-between; gap: .75rem; min-width: 0; }
+    .mini-chat-bubble {
+      border-radius: 12px; padding: .68rem .82rem; font-size: .74rem; line-height: 1.52;
+      border: 1px solid rgba(0,0,0,0.07); background: #fff; color: var(--ink);
+      overflow-wrap: anywhere; word-break: break-word;
+    }
+    .mini-chat-bubble.user { background: var(--ink); border-color: transparent; color: #fff; align-self: flex-end; max-width: 90%; }
+    .mini-code {
+      margin-top: .85rem; padding: .85rem; font-family: var(--mono); font-size: .67rem;
+      line-height: 1.55; color: var(--ink-2); min-height: 80px;
+      white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+    }
+
+    /* SECTIONS */
+    .section { padding-top: 6.5rem; }
+    .section-label { text-align: center; color: var(--ink-3); text-transform: uppercase; letter-spacing: .14em; font-size: .68rem; font-weight: 700; margin-bottom: .8rem; }
+    .section-title { text-align: center; font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.05; letter-spacing: -.055em; font-weight: 800; margin-bottom: .65rem; }
+    .section-sub { text-align: center; max-width: 42rem; margin: 0 auto 2.5rem; color: var(--ink-2); font-size: .98rem; line-height: 1.62; }
+
+    /* INSIGHTS */
+    .insight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .insight-card {
+      padding: 1.5rem; border-radius: var(--radius-card); border: 1px solid var(--line); background: #fff;
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+    }
+    .insight-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 12px 36px rgba(0,0,0,0.06); }
+    .insight-eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: .6rem; }
+    .insight-card h3 { font-size: 1.04rem; line-height: 1.22; letter-spacing: -.03em; font-weight: 700; margin-bottom: .45rem; }
+    .insight-card p { color: var(--ink-2); font-size: .87rem; line-height: 1.62; }
+
+    /* DEMO DECK */
+    .deck { padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--line); background: #f9fafb; }
+    .demo-controls { display: flex; justify-content: center; align-items: center; gap: .6rem; margin-bottom: 1.35rem; flex-wrap: wrap; }
+    .toggle-label { color: var(--ink-3); font-size: .82rem; }
+    .toggle-group { display: inline-flex; gap: .22rem; padding: .22rem; border-radius: var(--radius-pill); background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .toggle-btn { border: none; background: transparent; color: var(--ink-3); padding: .45rem .9rem; border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600; cursor: pointer; transition: background .14s, color .14s; }
+    .toggle-btn.active { color: var(--ink); background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.09); }
+
+    .demo-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 336px); gap: 1.15rem; align-items: start; }
+    .dashboard { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; min-width: 0; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; padding: .88rem 1.1rem; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: .87rem; font-weight: 700; letter-spacing: -.01em; }
+    .panel-header span { color: var(--ink-3); font-size: .72rem; font-weight: 500; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    th { text-align: left; padding: .62rem 1.1rem; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid rgba(0,0,0,0.05); }
+    td { padding: .84rem 1.1rem; border-bottom: 1px solid rgba(0,0,0,0.04); }
+    tbody tr[data-askable] { outline: none; cursor: pointer; transition: background .15s; }
+    tbody tr[data-askable]:hover, tbody tr[data-askable]:focus { background: rgba(0,0,0,0.02); }
+    tbody tr[data-askable].active { background: rgba(79,70,229,0.05); box-shadow: inset 3px 0 0 var(--accent); }
+
+    .badge { display: inline-flex; align-items: center; border-radius: var(--radius-pill); padding: .24rem .55rem; font-size: .69rem; font-weight: 700; }
+    .badge-green { background: rgba(22,163,74,0.1); color: var(--green); }
+    .badge-yellow { background: rgba(217,119,6,0.12); color: var(--yellow); }
+    .badge-red { background: rgba(220,38,38,0.1); color: var(--red); }
+
+    .kpi-card {
+      position: relative; border-radius: var(--radius-card); padding: 1.25rem;
+      background: #fff; border: 1px solid var(--line); cursor: pointer; outline: none;
+      overflow: hidden; transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .kpi-card:hover, .kpi-card:focus, .kpi-card.active { transform: translateY(-3px); border-color: rgba(79,70,229,0.2); box-shadow: 0 14px 36px rgba(0,0,0,0.07); }
+    .kpi-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-3); margin-bottom: .5rem; }
+    .kpi-value { font-size: 1.9rem; font-weight: 800; letter-spacing: -.05em; margin-bottom: .18rem; }
+    .kpi-change { font-size: .81rem; font-weight: 600; }
+    .up { color: var(--green); } .down { color: var(--red); }
+
+    .ask-btn, .ask-btn-row {
+      display: none; align-items: center; gap: .3rem;
+      border: 1px solid rgba(0,0,0,0.1); color: var(--ink-2); background: #fff;
+      border-radius: var(--radius-pill); font-size: .64rem; font-weight: 700;
+      padding: .3rem .58rem; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: transform .13s, box-shadow .13s;
+    }
+    .ask-btn:hover, .ask-btn-row:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .ask-btn { position: absolute; top: .78rem; right: .78rem; }
+    .button-mode .ask-btn, .button-mode .ask-btn-row { display: inline-flex; }
+
+    /* CHAT */
+    .chat-sidebar {
+      position: sticky; top: 4.25rem; display: flex; flex-direction: column;
+      height: clamp(460px, 72vh, 540px); min-height: 460px; max-height: calc(100vh - 5.5rem);
+      min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card);
+    }
+    .chat-header { display: flex; align-items: center; gap: .55rem; padding: .88rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .chat-dot { width: .62rem; height: .62rem; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px rgba(22,163,74,0.1); animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(.85);opacity:.7} }
+    .chat-title { font-size: .87rem; font-weight: 700; letter-spacing: -.02em; }
+    .chat-sub { margin-left: auto; font-size: .68rem; color: var(--ink-3); }
+    .chat-messages { flex: 1 1 0; min-height: 0; padding: .88rem; overflow-y: auto; display: flex; flex-direction: column; gap: .6rem; overscroll-behavior: contain; }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 999px; }
+    .msg { display: flex; flex-direction: column; gap: .24rem; animation: fadeUp .2s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    .msg-bubble { width: fit-content; max-width: 100%; border-radius: 16px; padding: .62rem .85rem; font-size: .81rem; line-height: 1.55; border: 1px solid rgba(0,0,0,0.07); background: #fff; }
+    .msg.user .msg-bubble { align-self: flex-end; background: var(--ink); color: #fff; border-color: transparent; }
+    .msg.ai .msg-bubble { color: var(--ink); }
+    .msg.ctx .msg-bubble { font-family: var(--mono); font-size: .69rem; background: transparent; border: none; padding: .1rem 0; color: var(--ink-3); }
+    .msg-label { font-size: .65rem; color: var(--ink-3); padding: 0 .2rem; }
+    .msg.user .msg-label { align-self: flex-end; }
+    .typing { display: inline-flex; gap: 4px; align-items: center; width: fit-content; padding: .62rem .78rem; border-radius: 14px; background: #f4f4f5; border: 1px solid rgba(0,0,0,0.07); }
+    .typing span { width: 5px; height: 5px; border-radius: 50%; background: rgba(0,0,0,0.28); animation: bounce 1.1s infinite; }
+    .typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
+    .chat-context-bar { display: flex; gap: .5rem; align-items: center; padding: .62rem .9rem; background: rgba(79,70,229,0.04); border-top: 1px solid rgba(0,0,0,0.05); }
+    .context-chip { flex: 1; font-family: var(--mono); font-size: .69rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .context-dismiss { border: none; background: none; color: var(--ink-3); cursor: pointer; font-size: .95rem; }
+    .chat-input-row { display: flex; gap: .5rem; padding: .78rem; border-top: 1px solid rgba(0,0,0,0.06); }
+    .chat-input { flex: 1; border-radius: var(--radius-pill); padding: .72rem 1rem; border: 1px solid rgba(0,0,0,0.1); background: #fff; font-size: .81rem; color: var(--ink); outline: none; font-family: var(--font); transition: border-color .15s, box-shadow .15s; }
+    .chat-input:focus { border-color: rgba(79,70,229,0.28); box-shadow: 0 0 0 4px rgba(79,70,229,0.07); }
+    .chat-send { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--ink); color: #fff; cursor: pointer; font-size: .9rem; transition: opacity .15s; }
+    .chat-send:hover { opacity: .82; }
+
+    /* CODE PANEL */
+    .code-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .code-block { overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); }
+    .code-block-header { display: flex; justify-content: space-between; gap: .5rem; align-items: center; padding: .78rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: .69rem; color: var(--ink-3); }
+    .code-block-label { font-family: var(--mono); color: var(--accent); font-weight: 700; }
+    .code-block pre { min-height: 70px; padding: .88rem 1rem; font-family: var(--mono); font-size: .72rem; line-height: 1.68; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+    .code-block pre.empty { color: var(--ink-3); font-style: italic; }
+
+    /* STEPS */
+    .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2.5rem; }
+    .step { padding: 1.5rem; border-radius: var(--radius-card); border: 1px solid var(--line); background: #fff; transition: transform .18s, border-color .18s, box-shadow .18s; }
+    .step:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 12px 36px rgba(0,0,0,0.06); }
+    .step-num { width: 1.9rem; height: 1.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--ink); color: #fff; font-weight: 800; font-size: .78rem; margin-bottom: 1rem; }
+    .step h3 { margin-bottom: .44rem; font-size: 1rem; font-weight: 700; letter-spacing: -.025em; }
+    .step p { color: var(--ink-2); font-size: .87rem; line-height: 1.62; }
+
+    /* PACKAGES */
+    .pkg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2.5rem; }
+    .pkg-card { display: block; text-decoration: none; color: inherit; padding: 1.4rem; border-radius: var(--radius-card); border: 1px solid var(--line); background: #fff; transition: transform .18s, border-color .18s, box-shadow .18s; }
+    .pkg-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 12px 36px rgba(0,0,0,0.07); }
+    .pkg-badge { font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .6rem; }
+    .pkg-name { font-family: var(--mono); color: var(--ink); font-size: .85rem; font-weight: 700; margin-bottom: .38rem; letter-spacing: -.01em; }
+    .pkg-desc { color: var(--ink-2); font-size: .83rem; line-height: 1.56; }
+    .pkg-tag { display: inline-flex; align-items: center; gap: .3rem; margin-top: .78rem; padding: .22rem .52rem; border-radius: var(--radius-pill); border: 1px solid rgba(0,0,0,0.08); color: var(--ink-3); font-size: .66rem; font-weight: 600; }
+
+    /* DARK CTA */
+    .cta-section { margin-top: 7rem; }
+    .cta-card { border-radius: var(--radius-lg); background: var(--ink); padding: 5rem 4rem; text-align: center; position: relative; overflow: hidden; }
+    .cta-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 25% 60%,rgba(79,70,229,0.35),transparent 55%), radial-gradient(ellipse at 80% 30%,rgba(124,58,237,0.25),transparent 50%); pointer-events: none; }
+    .cta-card h2 { font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -.055em; font-weight: 850; color: #fff; margin-bottom: .85rem; position: relative; }
+    .cta-card p { color: rgba(255,255,255,0.55); font-size: .98rem; line-height: 1.65; margin-bottom: 2.25rem; max-width: 36rem; margin-left: auto; margin-right: auto; position: relative; }
+    .cta-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; position: relative; }
+    .btn-inverse { background: #fff; color: var(--ink); }
+    .btn-inverse:hover { opacity: .9; }
+    .btn-ghost-white { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.13); }
+    .btn-ghost-white:hover { background: rgba(255,255,255,0.16); }
+
+    code { font-family: var(--mono); font-size: .9em; padding: .1em .38em; border-radius: .42em; color: var(--accent); background: rgba(79,70,229,0.08); }
+
+    footer { margin-top: 3.5rem; padding: 2rem 0 0; border-top: 1px solid rgba(0,0,0,0.07); display: flex; justify-content: space-between; align-items: center; gap: 1rem; color: var(--ink-3); font-size: .83rem; }
+    footer a { color: inherit; text-decoration: none; transition: color .15s; }
+    footer a:hover { color: var(--ink); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1040px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-stage { min-height: 0; }
+      .hero-card { position: relative; top: auto; }
+      .demo-layout { grid-template-columns: 1fr; }
+      .chat-sidebar { position: relative; top: auto; height: 480px; max-height: none; }
+      .insight-grid, .steps { grid-template-columns: 1fr 1fr; }
+      .pkg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      nav { padding: 0 1rem; }
+      .nav-link { display: none; }
+      .page-shell { padding: 0 1rem 4rem; }
+      .hero { padding-top: 3.5rem; }
+      .lens-grid, .code-panel, .kpi-grid { grid-template-columns: 1fr; }
+      .insight-grid, .steps, .pkg-grid { grid-template-columns: 1fr; }
+      .deck { padding: 1rem; border-radius: 24px; }
+      .demo-controls { align-items: stretch; }
+      .toggle-group { width: 100%; justify-content: stretch; }
+      .toggle-btn { flex: 1 1 0; padding-inline: .65rem; }
+      .panel { overflow: visible; }
+      .panel-header { flex-direction: column; align-items: flex-start; gap: .2rem; }
+      .chat-sidebar { height: 430px; min-height: 430px; }
+      .chat-header, .chat-input-row, .chat-context-bar { padding-inline: .78rem; }
+      table, thead, tbody, tr, th, td { display: block; }
+      thead { display: none; }
+      tbody { display: grid; gap: .75rem; padding: .9rem; }
+      tbody tr[data-askable] {
+        display: grid;
+        gap: .55rem;
+        padding: .9rem;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 18px;
+        background: #fff;
+      }
+      tbody tr[data-askable].active { box-shadow: inset 3px 0 0 var(--accent); }
+      td {
+        display: grid;
+        grid-template-columns: minmax(0, 92px) minmax(0, 1fr);
+        gap: .75rem;
+        align-items: center;
+        padding: 0;
+        border: none;
+        min-width: 0;
+      }
+      td::before {
+        content: attr(data-label);
+        color: var(--ink-3);
+        font-size: .66rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      td:last-child {
+        grid-template-columns: 1fr;
+        justify-items: start;
+        padding-top: .15rem;
+      }
+      td:last-child::before { display: none; }
+      .ask-btn-row { font-size: .68rem; padding: .38rem .72rem; }
+      .cta-card { padding: 3rem 1.5rem; }
+      .section { padding-top: 4rem; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="field-canvas"></canvas>
+
+  <nav>
+    <a href="#" class="nav-logo"><span class="spark">✦</span> askable-ui</a>
+    <div class="nav-links">
+      <a href="#demo" class="nav-link">Demo</a>
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#packages" class="nav-link">Packages</a>
+      <a href="https://github.com/askable-ui/askable" target="_blank" class="nav-gh">GitHub</a>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="spark">✦</span> One attribute. Real context.</div>
+        <h1>Your model knows what <em>just caught their eye.</em></h1>
+        <p>
+          Put <code>data-askable</code> on any meaningful element, observe once, then pass
+          <code>askable.toPromptContext()</code> at the AI boundary. The assistant gets the user's exact
+          visual focus — not a guess, the real thing.
+        </p>
+        <div class="hero-actions">
+          <div class="install-cmd" id="install-copy" title="Click to copy">
+            <span>npm install @askable-ui/core</span>
+            <span class="copy-icon" id="copy-icon">⎘ copy</span>
+          </div>
+          <a href="#demo" class="btn btn-primary">See it live</a>
+          <a href="https://github.com/askable-ui/askable" class="btn btn-secondary" target="_blank">GitHub</a>
+        </div>
+        <div class="hero-meta">
+          <span>One attribute</span>
+          <span>Zero framework lock-in</span>
+          <span>~1kb gzipped</span>
+          <span>React · Vue · Svelte · Django · Streamlit</span>
+        </div>
+      </div>
+
+      <div class="hero-stage">
+        <div class="hero-card" id="hero-card">
+          <div class="hero-card-top">
+            <div class="hero-window-dots"><span></span><span></span><span></span></div>
+            <div class="hero-chip">live focus lens</div>
+          </div>
+          <div class="hero-card-body">
+            <div class="lens-grid">
+              <div class="mini-board">
+                <div class="mini-grid">
+                  <div class="mini-stat highlight" data-mini="revenue">
+                    <div class="mini-label">MRR</div>
+                    <div class="mini-value">$128,400</div>
+                    <div class="mini-sub">+12.4% this month</div>
+                  </div>
+                  <div class="mini-stat" data-mini="churn">
+                    <div class="mini-label">Churn</div>
+                    <div class="mini-value">3.2%</div>
+                    <div class="mini-sub">improving</div>
+                  </div>
+                  <div class="mini-stat" data-mini="nps">
+                    <div class="mini-label">NPS</div>
+                    <div class="mini-value">67</div>
+                    <div class="mini-sub">industry avg 44</div>
+                  </div>
+                  <div class="mini-stat" data-mini="upsell">
+                    <div class="mini-label">Upsell</div>
+                    <div class="mini-value">Umbrella</div>
+                    <div class="mini-sub">starter → business</div>
+                  </div>
+                </div>
+                <div class="mini-table">
+                  <div class="mini-table-row"><strong>Acme</strong><span>$8.4k</span><span>healthy</span></div>
+                  <div class="mini-table-row is-active"><strong>Globex</strong><span>$5.2k</span><span>at risk</span></div>
+                  <div class="mini-table-row"><strong>Umbrella</strong><span>$2.1k</span><span>expanding</span></div>
+                </div>
+              </div>
+              <div class="mini-chat">
+                <div class="mini-chat-bubble">The assistant can read what's in focus without scraping your whole app.</div>
+                <div class="mini-chat-bubble user">Which account needs attention first?</div>
+                <div class="mini-chat-bubble">Globex. No login in 14 days, business plan, $5.2k MRR at risk.</div>
+              </div>
+            </div>
+            <div class="mini-code" id="mini-code">&lt;tr data-askable='{"company":"Globex Inc","status":"at_risk","last_login":"14 days ago"}'&gt;
+  ...
+&lt;/tr&gt;
+
+User is focused on: company: Globex Inc, status: at_risk, last_login: 14 days ago</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="insight-grid">
+        <article class="insight-card">
+          <div class="insight-eyebrow">Precision</div>
+          <h3>Context follows attention</h3>
+          <p>Users ask about whatever they're staring at. askable captures the exact focal target — not a serialized page dump.</p>
+        </article>
+        <article class="insight-card">
+          <div class="insight-eyebrow">Elegant</div>
+          <h3>Metadata lives where the UI already lives</h3>
+          <p>The same API payload that renders a row or card becomes model-ready context with one attribute.</p>
+        </article>
+        <article class="insight-card">
+          <div class="insight-eyebrow">Universal</div>
+          <h3>Works in real product surfaces</h3>
+          <p>Dashboards, forms, tables, support tooling — anywhere a user points, hovers, clicks, or focuses.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="demo" class="section">
+      <p class="section-label">Live demo</p>
+      <h2 class="section-title">Focus the UI. Watch the prompt tighten.</h2>
+      <p class="section-sub">Click a KPI card or account row. The context panel updates in real time — that's what goes into your model.</p>
+
+      <div class="deck">
+        <div class="demo-controls">
+          <span class="toggle-label">Trigger on:</span>
+          <div class="toggle-group">
+            <button class="toggle-btn" data-mode="hover">Hover</button>
+            <button class="toggle-btn active" data-mode="click">Click</button>
+            <button class="toggle-btn" data-mode="button">Button</button>
+          </div>
+        </div>
+
+        <div class="demo-layout">
+          <div class="dashboard">
+            <div class="kpi-grid" id="kpi-grid"></div>
+            <div class="panel">
+              <div class="panel-header">Top Accounts <span>same data drives UI + AI context</span></div>
+              <table>
+                <thead><tr><th>Company</th><th>MRR</th><th>Plan</th><th>Status</th><th></th></tr></thead>
+                <tbody id="accounts-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="chat-sidebar">
+            <div class="chat-header">
+              <div class="chat-dot"></div>
+              <span class="chat-title">AI Assistant</span>
+              <span class="chat-sub">powered by askable</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div class="msg ai">
+                <div class="msg-bubble">Click or hover a card — I'll inherit the exact UI context you're looking at.</div>
+                <span class="msg-label">Assistant</span>
+              </div>
+            </div>
+            <div class="chat-context-bar" id="chat-context-bar" style="display:none">
+              <span class="context-chip" id="context-chip"></span>
+              <button class="context-dismiss" id="context-dismiss">&times;</button>
+            </div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="chat-input" type="text" placeholder="Ask about what you're seeing…" />
+              <button class="chat-send" id="chat-send">↑</button>
+            </div>
+          </aside>
+        </div>
+
+        <div class="code-panel">
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-label">element in your UI</span>
+              <span>same rendered node, askable metadata attached</span>
+            </div>
+            <pre id="code-attr" class="empty">hover or click an element above…</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-label">askable.toPromptContext()</span>
+              <span>ready to inject at the model boundary</span>
+            </div>
+            <pre id="code-ctx" class="empty">waiting for focus…</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section">
+      <p class="section-label">How it works</p>
+      <h2 class="section-title">Three simple steps.</h2>
+      <p class="section-sub">No giant framework. No invasive serialization. Let the model borrow the user's focus.</p>
+      <div class="steps">
+        <article class="step">
+          <div class="step-num">1</div>
+          <h3>Annotate</h3>
+          <p>Add <code>data-askable</code> wherever your UI already has meaning: rows, charts, KPIs, inputs, cards, timeline items.</p>
+        </article>
+        <article class="step">
+          <div class="step-num">2</div>
+          <h3>Observe</h3>
+          <p>Call <code>askable.observe(document)</code> once. askable tracks click, hover, or focus and adapts as the DOM changes.</p>
+        </article>
+        <article class="step">
+          <div class="step-num">3</div>
+          <h3>Inject</h3>
+          <p>At the AI boundary, send <code>askable.toPromptContext()</code>. The assistant now knows what the user is actually looking at.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="packages" class="section">
+      <p class="section-label">Packages</p>
+      <h2 class="section-title">Pick your stack. Keep the idea.</h2>
+      <p class="section-sub">One core library. Thin adapters for every framework. Same mental model everywhere.</p>
+      <div class="pkg-grid">
+        <a class="pkg-card" href="https://www.npmjs.com/package/@askable-ui/core" target="_blank">
+          <div class="pkg-badge">JS · Core</div>
+          <div class="pkg-name">@askable-ui/core</div>
+          <div class="pkg-desc">Framework-agnostic observer and context builder. Zero dependencies.</div>
+          <span class="pkg-tag">~1kb gz</span>
+        </a>
+        <a class="pkg-card" href="https://www.npmjs.com/package/@askable-ui/react" target="_blank">
+          <div class="pkg-badge">JS · React</div>
+          <div class="pkg-name">@askable-ui/react</div>
+          <div class="pkg-desc"><code>useAskable()</code> hook and <code>&lt;Askable&gt;</code> component for React 17+.</div>
+          <span class="pkg-tag">~0.5kb gz</span>
+        </a>
+        <a class="pkg-card" href="https://www.npmjs.com/package/@askable-ui/vue" target="_blank">
+          <div class="pkg-badge">JS · Vue</div>
+          <div class="pkg-name">@askable-ui/vue</div>
+          <div class="pkg-desc">Vue 3 composables and component for the same focus-aware pattern.</div>
+          <span class="pkg-tag">~0.5kb gz</span>
+        </a>
+        <a class="pkg-card" href="https://www.npmjs.com/package/@askable-ui/svelte" target="_blank">
+          <div class="pkg-badge">JS · Svelte</div>
+          <div class="pkg-name">@askable-ui/svelte</div>
+          <div class="pkg-desc">Svelte store and component helpers for fast-moving interfaces.</div>
+          <span class="pkg-tag">~0.5kb gz</span>
+        </a>
+        <a class="pkg-card" href="https://pypi.org/project/askable-django/" target="_blank">
+          <div class="pkg-badge">Python · Django</div>
+          <div class="pkg-name">askable-django</div>
+          <div class="pkg-desc">Template tags and auto-inject middleware for Django 4+.</div>
+          <span class="pkg-tag">PyPI</span>
+        </a>
+        <a class="pkg-card" href="https://pypi.org/project/askable-streamlit/" target="_blank">
+          <div class="pkg-badge">Python · Streamlit</div>
+          <div class="pkg-name">askable-streamlit</div>
+          <div class="pkg-desc">Custom component that returns UI focus as a Python dict.</div>
+          <span class="pkg-tag">PyPI</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="cta-section">
+      <div class="cta-card">
+        <h2>Start with one attribute.</h2>
+        <p>Drop <code style="color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.1)">data-askable</code> on your most important element. Working context in under five minutes.</p>
+        <div class="cta-actions">
+          <a href="https://github.com/askable-ui/askable" target="_blank" class="btn btn-inverse">View on GitHub</a>
+          <a href="https://www.npmjs.com/package/@askable-ui/core" target="_blank" class="btn btn-ghost-white">npm install</a>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>askable-ui — context that feels native to the UI</span>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <a href="https://github.com/askable-ui/askable" target="_blank">GitHub</a>
+        <a href="https://www.npmjs.com/org/askable-ui" target="_blank">npm</a>
+        <a href="https://pypi.org/project/askable-django/" target="_blank">PyPI</a>
+        <a href="https://github.com/askable-ui/askable/blob/main/LICENSE" target="_blank">MIT</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+  (function() {
+    var EVENT_MAP = { click: 'click', hover: 'mouseenter', focus: 'focus' };
+    var ALL_EVENTS = ['click', 'hover', 'focus'];
+    function parseMeta(raw) { try { return JSON.parse(raw); } catch (e) { return raw; } }
+    function extractText(el) { return (el.textContent || '').trim(); }
+    function Observer(onFocus) {
+      this.root = null; this.mo = null; this.els = []; this.evts = ALL_EVENTS;
+      var self = this;
+      this.handler = function(e) {
+        var raw = e.currentTarget.getAttribute('data-askable');
+        if (!raw) return;
+        onFocus({ meta: parseMeta(raw), text: extractText(e.currentTarget), element: e.currentTarget, timestamp: Date.now() });
+      };
+    }
+    Observer.prototype.observe = function(root, evts) {
+      if (this.root) this.unobserve();
+      this.root = root; this.evts = evts || ALL_EVENTS;
+      var self = this;
+      (root === document ? document.documentElement : root).querySelectorAll('[data-askable]').forEach(function(el) { self.attach(el); });
+      this.mo = new MutationObserver(function(ms) {
+        ms.forEach(function(m) {
+          m.addedNodes.forEach(function(n) {
+            if (!(n instanceof HTMLElement)) return;
+            if (n.hasAttribute('data-askable')) self.attach(n);
+            n.querySelectorAll('[data-askable]').forEach(function(el) { self.attach(el); });
+          });
+        });
+      });
+      this.mo.observe(root, { childList: true, subtree: true });
+    };
+    Observer.prototype.unobserve = function() {
+      if (this.mo) { this.mo.disconnect(); this.mo = null; }
+      var self = this;
+      this.els.forEach(function(el) { self.detach(el); });
+      this.els = []; this.root = null;
+    };
+    Observer.prototype.attach = function(el) {
+      if (this.els.indexOf(el) !== -1) return;
+      var self = this;
+      this.evts.forEach(function(e) { el.addEventListener(EVENT_MAP[e], self.handler); });
+      this.els.push(el);
+    };
+    Observer.prototype.detach = function(el) {
+      var self = this;
+      this.evts.forEach(function(e) { el.removeEventListener(EVENT_MAP[e], self.handler); });
+    };
+    function Ctx() {
+      var self = this;
+      this.focus = null; this.currentFocus = null; this.cbs = [];
+      this.obs = new Observer(function(f) { self.focus = f; self.currentFocus = f; self.cbs.forEach(function(fn) { fn(f); }); });
+    }
+    Ctx.prototype.observe = function(root, opts) { this.obs.observe(root, opts && opts.events); };
+    Ctx.prototype.unobserve = function() { this.obs.unobserve(); };
+    Ctx.prototype.on = function(ev, fn) { if (ev === 'focus') this.cbs.push(fn); };
+    Ctx.prototype.select = function(el) {
+      var raw = el.getAttribute('data-askable'); if (!raw) return;
+      var f = { meta: parseMeta(raw), text: extractText(el), element: el, timestamp: Date.now() };
+      this.focus = f; this.currentFocus = f; this.cbs.forEach(function(fn) { fn(f); });
+    };
+    Ctx.prototype.clear = function() { this.focus = null; this.currentFocus = null; };
+    Ctx.prototype.toPromptContext = function() {
+      var f = this.focus; if (!f) return 'No UI element is currently focused.';
+      var m = f.meta;
+      var ms = typeof m === 'string' ? m : Object.keys(m).map(function(k) { return k + ': ' + m[k]; }).join(', ');
+      var p = ['User is focused on:'];
+      if (ms) p.push(ms);
+      if (f.text) p.push('value "' + f.text + '"');
+      return p.join(' — ');
+    };
+    var kpiData = [
+      { widget: 'revenue', metric: 'Monthly Recurring Revenue', value: '$128,400', change: '+12.4%', period: 'last 30 days', label: 'Monthly Revenue', changeDir: 'up', changeText: '+12.4% vs last month' },
+      { widget: 'churn', metric: 'Churn Rate', value: '3.2%', change: '-0.8%', trend: 'improving', period: 'last 30 days', label: 'Churn Rate', changeDir: 'up', changeText: '-0.8% improvement' },
+      { widget: 'arpu', metric: 'Average Revenue Per User', value: '$42.10', change: '-2.1%', period: 'last 30 days', label: 'ARPU', changeDir: 'down', changeText: '-2.1% vs last month' },
+      { widget: 'nps', metric: 'Net Promoter Score', value: '67', benchmark: 'industry avg: 44', period: 'Q3 2024', label: 'NPS Score', changeDir: 'up', changeText: '+3 vs last quarter' }
+    ];
+    var accountData = [
+      { widget: 'account_row', company: 'Acme Corp', mrr: '$8,400', plan: 'Enterprise', status: 'healthy' },
+      { widget: 'account_row', company: 'Globex Inc', mrr: '$5,200', plan: 'Business', status: 'at_risk', last_login: '14 days ago' },
+      { widget: 'account_row', company: 'Initech', mrr: '$3,900', plan: 'Business', status: 'churned', churned_date: '2024-10-01' },
+      { widget: 'account_row', company: 'Umbrella Ltd', mrr: '$2,100', plan: 'Starter', status: 'healthy', growth: 'expanding' }
+    ];
+    var statusBadge = { healthy: 'badge-green', at_risk: 'badge-yellow', churned: 'badge-red' };
+    var statusLabel = { healthy: 'Healthy', at_risk: 'At Risk', churned: 'Churned' };
+    var kpiGrid = document.getElementById('kpi-grid');
+    kpiData.forEach(function(d) {
+      var meta = { widget: d.widget, metric: d.metric, value: d.value, change: d.change, period: d.period };
+      if (d.benchmark) meta.benchmark = d.benchmark;
+      if (d.trend) meta.trend = d.trend;
+      var card = document.createElement('div');
+      card.className = 'kpi-card'; card.tabIndex = 0;
+      card.setAttribute('data-askable', JSON.stringify(meta));
+      card.innerHTML = '<button class="ask-btn"><span>✦</span> Ask AI</button>' +
+        '<div class="kpi-label">' + d.label + '</div>' +
+        '<div class="kpi-value">' + d.value + '</div>' +
+        '<div class="kpi-change ' + d.changeDir + '">' + d.changeText + '</div>';
+      kpiGrid.appendChild(card);
+    });
+    var tbody = document.getElementById('accounts-tbody');
+    accountData.forEach(function(d) {
+      var meta = { widget: d.widget, company: d.company, mrr: d.mrr, plan: d.plan, status: d.status };
+      if (d.last_login) meta.last_login = d.last_login;
+      if (d.churned_date) meta.churned_date = d.churned_date;
+      if (d.growth) meta.growth = d.growth;
+      var tr = document.createElement('tr'); tr.tabIndex = 0;
+      tr.setAttribute('data-askable', JSON.stringify(meta));
+      tr.innerHTML = '<td data-label="Company">' + d.company + '</td><td data-label="MRR">' + d.mrr + '</td><td data-label="Plan">' + d.plan + '</td>' +
+        '<td data-label="Status"><span class="badge ' + statusBadge[d.status] + '">' + statusLabel[d.status] + '</span></td>' +
+        '<td data-label="Ask" style="width:1px"><button class="ask-btn-row">✦ Ask AI</button></td>';
+      tbody.appendChild(tr);
+    });
+    var askable = new Ctx();
+    var messagesEl = document.getElementById('chat-messages');
+    var chatInput = document.getElementById('chat-input');
+    var chatSend = document.getElementById('chat-send');
+    var codeAttr = document.getElementById('code-attr');
+    var codeCtx = document.getElementById('code-ctx');
+    var contextBar = document.getElementById('chat-context-bar');
+    var contextChip = document.getElementById('context-chip');
+    var activeEl = null; var typingTimer = null; var lastKey = null;
+    var dashboard = document.querySelector('.dashboard');
+    askable.observe(document, { events: ['click'] });
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.ask-btn, .ask-btn-row');
+      if (!btn) return;
+      e.stopPropagation();
+      var el = btn.closest('[data-askable]');
+      if (el) askable.select(el);
+    });
+    document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var mode = btn.getAttribute('data-mode');
+        lastKey = null; askable.unobserve();
+        if (mode === 'button') { dashboard.classList.add('button-mode'); }
+        else { dashboard.classList.remove('button-mode'); askable.observe(document, { events: mode === 'hover' ? ['hover'] : ['click'] }); }
+      });
+    });
+    var responses = {
+      revenue: 'MRR is up 12.4% to $128,400. Momentum looks healthy, likely expansion + retention working together.',
+      churn: 'Churn is 3.2%, down 0.8 points. Trending in the right direction and below the usual danger zone.',
+      arpu: 'ARPU slipped 2.1% to $42.10. Worth inspecting plan mix and discounting before celebrating topline growth.',
+      nps: 'NPS is 67, comfortably above the 44 benchmark. Customer sentiment is probably helping expansion motion.',
+      account_row: function(m) {
+        if (m.status === 'at_risk') return m.company + ' is the priority. No login for ' + m.last_login + ', business plan, ' + m.mrr + ' at risk.';
+        if (m.status === 'churned') return m.company + ' already churned on ' + m.churned_date + '. Best use is a win-back or loss analysis.';
+        if (m.growth === 'expanding') return m.company + ' is your cleanest upsell signal. Expansion behavior is already visible.';
+        return m.company + ' looks healthy at ' + m.mrr + '. Good candidate for a reference or QBR.';
+      }
+    };
+    function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+    function addMsg(type, text) {
+      var wrap = document.createElement('div'); wrap.className = 'msg ' + type;
+      var bubble = document.createElement('div'); bubble.className = 'msg-bubble'; bubble.textContent = text;
+      wrap.appendChild(bubble);
+      if (type !== 'ctx') { var label = document.createElement('span'); label.className = 'msg-label'; label.textContent = type === 'ai' ? 'Assistant' : 'You'; wrap.appendChild(label); }
+      messagesEl.appendChild(wrap); scrollBottom();
+    }
+    function showTyping() { var el = document.createElement('div'); el.className = 'typing'; el.id = 'typing'; el.innerHTML = '<span></span><span></span><span></span>'; messagesEl.appendChild(el); scrollBottom(); }
+    function removeTyping() { var t = document.getElementById('typing'); if (t) t.remove(); }
+    askable.on('focus', function(focus) {
+      var meta = focus.meta; var prompt = askable.toPromptContext(); var key = JSON.stringify(meta);
+      if (key === lastKey) return; lastKey = key;
+      var tag = focus.element.tagName.toLowerCase();
+      var inner = focus.element.innerHTML.trim().split('\n').map(function(l) { return '  ' + l; }).join('\n');
+      if (inner.length > 320) inner = inner.slice(0, 320) + '\n  ...';
+      codeAttr.textContent = '<' + tag + ' data-askable=\'' + JSON.stringify(meta) + '\'>\n' + inner + '\n</' + tag + '>';
+      codeAttr.classList.remove('empty');
+      codeCtx.textContent = prompt; codeCtx.classList.remove('empty');
+      contextBar.style.display = 'flex'; contextChip.textContent = prompt;
+      if (activeEl) activeEl.classList.remove('active');
+      activeEl = focus.element; activeEl.classList.add('active');
+      clearTimeout(typingTimer); removeTyping();
+      addMsg('ctx', '→ ' + prompt); showTyping();
+      typingTimer = setTimeout(function() {
+        removeTyping();
+        var r = responses[meta.widget];
+        addMsg('ai', typeof r === 'function' ? r(meta) : (r || ('Focused on ' + meta.widget + '.')));
+      }, 760);
+    });
+    document.getElementById('context-dismiss').addEventListener('click', function() {
+      contextBar.style.display = 'none'; contextChip.textContent = '';
+      if (activeEl) activeEl.classList.remove('active');
+      activeEl = null; lastKey = null; askable.clear();
+      codeAttr.textContent = 'hover or click an element above…'; codeCtx.textContent = 'waiting for focus…';
+      codeAttr.classList.add('empty'); codeCtx.classList.add('empty');
+    });
+    function send() {
+      var text = chatInput.value.trim(); if (!text) return;
+      chatInput.value = ''; addMsg('user', text); clearTimeout(typingTimer); removeTyping(); showTyping();
+      typingTimer = setTimeout(function() {
+        removeTyping();
+        var lower = text.toLowerCase(); var reply;
+        if (lower.indexOf('risk') !== -1) reply = 'Globex Inc is the top risk. No login for 14 days and still carrying $5.2k MRR on Business.';
+        else if (lower.indexOf('summar') !== -1 || lower.indexOf('overview') !== -1) reply = 'MRR is growing, churn is improving, NPS is strong, and Globex is the obvious retention priority.';
+        else if (lower.indexOf('upsell') !== -1) reply = 'Umbrella Ltd is the cleanest upsell candidate. Healthy status plus expansion signal on Starter.';
+        else reply = askable.currentFocus ? 'I can answer using the focused UI context. Ask for risk, trends, or next action.' : 'Select a card or account first so I can inherit the right context.';
+        addMsg('ai', reply);
+      }, 900);
+    }
+    chatSend.addEventListener('click', send);
+    chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
+    var installCopy = document.getElementById('install-copy');
+    if (installCopy) {
+      installCopy.addEventListener('click', function() {
+        var el = document.getElementById('copy-icon');
+        function flash(label) { if (!el) return; el.textContent = label; setTimeout(function() { el.textContent = '⎘ copy'; }, 1800); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('npm install @askable-ui/core').then(function() { flash('✓ copied'); }).catch(function() { flash('copy manually'); });
+        } else { flash('copy manually'); }
+      });
+    }
+  })();
+  </script>
+
+  <script>
+  (function() {
+    var canvas = document.getElementById('field-canvas');
+    if (!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var dots = [];
+    var mouse = { x: window.innerWidth * 0.72, y: 220 };
+    var spacing = 30; var influence = 235; var ease = 0.078;
+    function resize() {
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight; dots = [];
+      for (var y = spacing / 2; y < canvas.height; y += spacing)
+        for (var x = spacing / 2; x < canvas.width; x += spacing)
+          dots.push({ ox: x, oy: y, x: x, y: y });
+    }
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        var dx = mouse.x - d.ox; var dy = mouse.y - d.oy;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        var force = Math.max(0, 1 - dist / influence);
+        var pull = force * 30;
+        d.x += ((d.ox + dx / dist * pull) - d.x) * ease;
+        d.y += ((d.oy + dy / dist * pull) - d.y) * ease;
+        var alpha = force > 0.04 ? 0.1 + force * 0.32 : 0.06;
+        var size = force > 0.02 ? 2.8 + force * 1.8 : 1.3;
+        ctx.fillStyle = force > 0.04 ? 'rgba(79,70,229,' + alpha + ')' : 'rgba(0,0,0,' + alpha + ')';
+        ctx.beginPath(); ctx.arc(d.x, d.y, size, 0, Math.PI * 2); ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', function() { mouse.x = window.innerWidth * 0.72; mouse.y = 220; });
+    window.addEventListener('resize', resize);
+    resize(); draw();
+  })();
+  </script>
+
+  <script>
+  (function() {
+    var card = document.getElementById('hero-card');
+    var miniCode = document.getElementById('mini-code');
+    if (!card || !miniCode) return;
+    var stats = Array.prototype.slice.call(document.querySelectorAll('.mini-stat'));
+    var snippets = {
+      revenue: 'User is focused on: widget: revenue, metric: Monthly Recurring Revenue, value: $128,400, change: +12.4%\n→ Revenue growth is healthy and likely durable.',
+      churn: 'User is focused on: widget: churn, metric: Churn Rate, value: 3.2%, trend: improving\n→ Retention is strengthening.',
+      nps: 'User is focused on: widget: nps, metric: Net Promoter Score, value: 67, benchmark: industry avg 44\n→ Satisfaction is materially above benchmark.',
+      upsell: 'User is focused on: company: Umbrella Ltd, plan: Starter, growth: expanding\n→ Strongest upsell candidate in view.'
+    };
+    function setActive(key) {
+      stats.forEach(function(el) { el.classList.toggle('highlight', el.getAttribute('data-mini') === key); });
+      miniCode.textContent = snippets[key] || snippets.revenue;
+    }
+    stats.forEach(function(stat) { stat.addEventListener('mouseenter', function() { setActive(stat.getAttribute('data-mini')); }); });
+    setActive('revenue');
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      var px = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      var py = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+      card.style.transform = 'rotateX(' + ((0.5 - py) * 6).toFixed(2) + 'deg) rotateY(' + ((px - 0.5) * 7).toFixed(2) + 'deg)';
+    });
+    card.addEventListener('mouseleave', function() { card.style.transform = 'rotateX(0deg) rotateY(0deg)'; });
+  })();
+  </script>
+</body>
+</html>
