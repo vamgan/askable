@@ -11,6 +11,8 @@ export interface AskableFocus {
 
 export type AskableEventMap = {
   focus: AskableFocus;
+  /** Fires when clear() is called — focus has been reset to null */
+  clear: null;
 };
 
 export type AskableEventName = keyof AskableEventMap;
@@ -70,6 +72,8 @@ export interface AskableContext {
   off<K extends AskableEventName>(event: K, handler: AskableEventHandler<K>): void;
   /** Programmatically select an element — use for explicit "Ask AI" buttons */
   select(element: HTMLElement): void;
+  /** Reset the current focus to null and emit a 'clear' event */
+  clear(): void;
   /** Serialize current focus to structured prompt-ready data */
   serializeFocus(options?: AskablePromptContextOptions): AskableSerializedFocus | null;
   /** Serialize current focus to a prompt-ready string */

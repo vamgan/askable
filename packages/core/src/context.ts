@@ -50,6 +50,11 @@ export class AskableContextImpl implements AskableContext {
     }
   }
 
+  clear(): void {
+    this.currentFocus = null;
+    this.emitter.emit('clear', null);
+  }
+
   serializeFocus(options?: AskablePromptContextOptions): AskableSerializedFocus | null {
     const focus = this.currentFocus;
     if (!focus) return null;

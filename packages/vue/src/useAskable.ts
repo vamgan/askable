@@ -32,14 +32,19 @@ export function useAskable(options?: { events?: AskableEvent[] }) {
   function handler(f: AskableFocus) {
     focus.value = f;
   }
+  function clearHandler() {
+    focus.value = null;
+  }
 
   onMounted(() => {
     refCount++;
     ctx.on('focus', handler);
+    ctx.on('clear', clearHandler);
   });
 
   onUnmounted(() => {
     ctx.off('focus', handler);
+    ctx.off('clear', clearHandler);
     refCount--;
     if (refCount === 0) {
       globalCtx?.destroy();

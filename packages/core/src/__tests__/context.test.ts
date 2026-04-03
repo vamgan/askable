@@ -267,6 +267,26 @@ describe('createAskableContext', () => {
     cleanup(el);
   });
 
+  it('clear() resets focus to null and emits clear event', () => {
+    const el = makeEl({ widget: 'chart' }, 'Chart');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    el.click();
+    expect(ctx.getFocus()).not.toBeNull();
+
+    const clearHandler = vi.fn();
+    ctx.on('clear', clearHandler);
+    ctx.clear();
+
+    expect(ctx.getFocus()).toBeNull();
+    expect(clearHandler).toHaveBeenCalledOnce();
+    expect(clearHandler.mock.calls[0][0]).toBeNull();
+
+    ctx.destroy();
+    cleanup(el);
+  });
+
   it('observe() is a no-op when called outside a browser environment', () => {
     const win = globalThis.window;
     Object.defineProperty(globalThis, 'window', { value: undefined, configurable: true });
