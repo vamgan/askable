@@ -37,7 +37,7 @@ export function useAskable(options?: {
     }
 
     const handler = (f: AskableFocus) => setFocus(f);
-    const clearHandler = () => setFocus(null);
+    const clearHandler = (_: null) => setFocus(null);
     current.on('focus', handler);
     current.on('clear', clearHandler);
 
