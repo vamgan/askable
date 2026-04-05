@@ -51,3 +51,30 @@ jobs:
       - name: Build docs
         run: npm run build
         working-directory: site/docs
+
+  python-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Django package
+        run: pip install -e packages/python/django/
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run Django smoke tests
+        run: pytest packages/python/django/tests/ -v
+
+      - name: Install Streamlit package
+        run: pip install -e packages/python/streamlit/
+
+      - name: Run Streamlit smoke tests
+        run: pytest packages/python/streamlit/tests/ -v
