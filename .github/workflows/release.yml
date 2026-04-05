@@ -11,7 +11,7 @@ on:
 
 permissions:
   contents: write   # create GitHub Release
-  id-token: write   # npm provenance
+  id-token: write   # npm trusted publishing (OIDC provenance)
 
 jobs:
   release:
@@ -54,28 +54,20 @@ jobs:
           fi
 
       - name: Publish @askable-ui/core
-        run: npm publish --access public --tag ${{ steps.tag.outputs.dist_tag }}
+        run: npm publish --access public --provenance --tag ${{ steps.tag.outputs.dist_tag }}
         working-directory: packages/core
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @askable-ui/react
-        run: npm publish --access public --tag ${{ steps.tag.outputs.dist_tag }}
+        run: npm publish --access public --provenance --tag ${{ steps.tag.outputs.dist_tag }}
         working-directory: packages/react
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @askable-ui/vue
-        run: npm publish --access public --tag ${{ steps.tag.outputs.dist_tag }}
+        run: npm publish --access public --provenance --tag ${{ steps.tag.outputs.dist_tag }}
         working-directory: packages/vue
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @askable-ui/svelte
-        run: npm publish --access public --tag ${{ steps.tag.outputs.dist_tag }}
+        run: npm publish --access public --provenance --tag ${{ steps.tag.outputs.dist_tag }}
         working-directory: packages/svelte
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: actions/github-script@v7
