@@ -1,0 +1,74 @@
+name: Release Python
+
+# Triggered by Python-specific version tags:
+#   py-v0.2.0          → stable release
+#   py-v0.2.0-beta1    → pre-release
+
+on:
+  push:
+    tags:
+      - "py-v*"
+
+permissions:
+  contents: write
+  id-token: write   # PyPI trusted publishing
+
+jobs:
+  release-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Install and test Django package
+        run: |
+          pip install -e packages/python/django/ pytest
+          pytest packages/python/django/tests/ -v
+
+      - name: Install and test Streamlit package
+        run: |
+          pip install -e packages/python/streamlit/
+          pytest packages/python/streamlit/tests/ -v
+
+      - name: Build Django package
+        run: python -m build
+        working-directory: packages/python/django
+
+      - name: Build Streamlit package
+        run: python -m build
+        working-directory: packages/python/streamlit
+
+      - name: Publish askable-django to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/django/dist/
+
+      - name: Publish askable-streamlit to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/streamlit/dist/
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            const isPrerelease = tag.includes('beta') || tag.includes('alpha') || tag.includes('rc');
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: tag,
+              generate_release_notes: true,
+              prerelease: isPrerelease,
+              draft: false,
+            });
