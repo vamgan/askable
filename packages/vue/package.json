@@ -38,7 +38,7 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@askable-ui/core": "^0.1.0"
+    "@askable-ui/core": "^0.2.0"
   },
   "devDependencies": {
     "@askable-ui/core": "*",
