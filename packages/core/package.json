@@ -23,7 +23,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench": "node bench/perf.mjs",
+    "bench:ci": "node bench/perf.mjs --budget"
   },
   "keywords": [
     "llm",

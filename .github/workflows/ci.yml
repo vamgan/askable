@@ -52,6 +52,31 @@ jobs:
         run: npm run build
         working-directory: site/docs
 
+  perf-budget:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install jsdom
+        run: npm install --save-dev jsdom
+
+      - name: Build core
+        run: npm run build -w packages/core
+
+      - name: Run performance budget
+        run: npm run bench:ci -w packages/core
+
   python-smoke:
     runs-on: ubuntu-latest
 
