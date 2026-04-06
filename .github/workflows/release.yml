@@ -8,6 +8,11 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.3.0)'
+        required: true
 
 permissions:
   contents: write   # create GitHub Release
@@ -44,7 +49,7 @@ jobs:
       - name: Resolve npm dist-tag
         id: tag
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           if [[ "$TAG" == *"-beta."* || "$TAG" == *"-alpha."* || "$TAG" == *"-rc."* ]]; then
             echo "dist_tag=beta" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
@@ -73,7 +78,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const tag = context.ref.replace('refs/tags/', '');
+            const tag = context.payload.inputs?.tag || context.ref.replace('refs/tags/', '');
             const isPrerelease = ${{ steps.tag.outputs.prerelease }};
             await github.rest.repos.createRelease({
               owner: context.repo.owner,
