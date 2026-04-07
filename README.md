@@ -129,7 +129,7 @@ askable-ui is the context layer. It doesn't replace your LLM SDK — it gives it
 - **"Ask AI" button** — `ctx.select(element)` pins focus to any element programmatically
 - **Conversation history** — `ctx.toHistoryContext(n)` for multi-turn context
 - **Redaction hooks** — strip sensitive fields before data reaches serialization
-- **Inspector panel** — dev overlay showing live focus, context, and interaction history
+- **Inspector panel** — `<AskableInspector />` or `useAskable({ inspector: true })` for a live dev overlay
 - **~1 kb gzipped** — zero runtime dependencies
 
 ---
@@ -142,7 +142,6 @@ askable-ui is the context layer. It doesn't replace your LLM SDK — it gives it
 | [`@askable-ui/react`](https://www.npmjs.com/package/@askable-ui/react) | [![npm](https://img.shields.io/npm/v/@askable-ui/react?color=4f46e5)](https://www.npmjs.com/package/@askable-ui/react) | React 18+ |
 | [`@askable-ui/vue`](https://www.npmjs.com/package/@askable-ui/vue) | [![npm](https://img.shields.io/npm/v/@askable-ui/vue?color=4f46e5)](https://www.npmjs.com/package/@askable-ui/vue) | Vue 3 |
 | [`@askable-ui/svelte`](https://www.npmjs.com/package/@askable-ui/svelte) | [![npm](https://img.shields.io/npm/v/@askable-ui/svelte?color=4f46e5)](https://www.npmjs.com/package/@askable-ui/svelte) | Svelte 4 & 5 |
-| [`askable-shared`](https://pypi.org/project/askable-shared/) | [![PyPI](https://img.shields.io/pypi/v/askable-shared?color=4f46e5)](https://pypi.org/project/askable-shared/) | Python — Django, FastAPI, Streamlit |
 
 <details>
 <summary><strong>Framework quick starts</strong></summary>
