@@ -75,4 +75,4 @@ jobs:
         run: |
           gh workflow run publish_release.yml \
             --field tag="v${TAG_VERSION}" \
-            --ref main
+            --ref "v${TAG_VERSION}"
