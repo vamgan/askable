@@ -1,3 +1,4 @@
+export { AskableContextImpl } from './context.js';
 export { createAskableInspector } from './inspector.js';
 export { a11yTextExtractor } from './a11y.js';
 export type {
@@ -8,13 +9,11 @@ export type {
 export type {
   AskableContext,
   AskableContextOptions,
-  AskableContextOutputOptions,
   AskableEvent,
   AskableEventHandler,
   AskableEventMap,
   AskableEventName,
   AskableFocus,
-  AskableFocusSource,
   AskableObserveOptions,
   AskablePromptContextOptions,
   AskablePromptFormat,
