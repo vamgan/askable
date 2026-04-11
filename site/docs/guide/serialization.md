@@ -1,6 +1,6 @@
 # Prompt Serialization
 
-`toPromptContext()` and `toHistoryContext()` accept an `AskablePromptContextOptions` object to control exactly how context is serialized.
+`toPromptContext()`, `toHistoryContext()`, and `toContext()` accept an `AskablePromptContextOptions` object to control exactly how context is serialized.
 
 ## Presets
 
@@ -24,7 +24,7 @@ ctx.toPromptContext({ preset: 'compact', includeText: true });
 // compact but with text included
 ```
 
-Presets work with all serialization methods: `toPromptContext()`, `toHistoryContext()`, and `serializeFocus()`.
+Presets work with all serialization methods: `toPromptContext()`, `toHistoryContext()`, `toContext()`, and `serializeFocus()`.
 
 ## Default output
 
@@ -153,3 +153,28 @@ Use this to:
 | `prefix` | `string` | `'User is focused on:'` | Prefix in natural format |
 | `textLabel` | `string` | `'value'` | Label for text in natural format |
 | `maxTokens` | `number` | — | Token budget (4 chars/token estimate). Appends `[truncated]` if exceeded. |
+
+## `toContext()` — combined output
+
+Instead of manually concatenating `toPromptContext()` and `toHistoryContext()`, use `toContext()` to get both in a single call:
+
+```ts
+// Replaces this:
+const systemPrompt = [
+  'Current selection:',
+  ctx.toPromptContext(),
+  '',
+  'Recent interactions:',
+  ctx.toHistoryContext(5),
+].join('\n');
+
+// With this:
+const systemPrompt = ctx.toContext({ history: 5 });
+```
+
+All prompt options pass through:
+
+```ts
+ctx.toContext({ history: 3, preset: 'compact', maxTokens: 300 });
+ctx.toContext({ history: 5, currentLabel: 'Active', historyLabel: 'Previous' });
+```

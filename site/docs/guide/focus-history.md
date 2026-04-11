@@ -8,12 +8,25 @@
 const focus = ctx.getFocus();
 
 if (focus) {
+  focus.source     // 'dom' | 'select' | 'push'
   focus.meta       // Record<string, unknown> | string
   focus.text       // trimmed textContent of the element
-  focus.element    // the HTMLElement itself
+  focus.element    // the HTMLElement (undefined when set via push())
   focus.timestamp  // Unix ms when focus was set
 }
 ```
+
+### Focus source
+
+Every focus entry includes a `source` field that tells you how it was initiated:
+
+| Source | Set by | Use case |
+|---|---|---|
+| `'dom'` | User click, hover, or keyboard focus | Passive observation |
+| `'select'` | `ctx.select(element)` | "Ask AI" button patterns |
+| `'push'` | `ctx.push(meta, text)` | Third-party libraries (AG Grid, charts, etc.) |
+
+Use this to differentiate behavior — e.g., suppress auto-suggestions for `push` events, or show a different UI for explicit `select` actions.
 
 ## History
 
@@ -89,6 +102,47 @@ async function ask(userMessage: string) {
 }
 ```
 
+## Combined context with `toContext()`
+
+`toContext()` returns current focus + optional history in a single string — no manual concatenation needed:
+
+```ts
+// Current focus only (history defaults to 0)
+ctx.toContext();
+// → "Current: User is focused on: metric: revenue — value "Revenue""
+
+// Include recent interactions
+ctx.toContext({ history: 5 });
+// → "Current: User is focused on: metric: revenue — value "Revenue"
+//
+//    Recent interactions:
+//    [1] User is focused on: widget: chart — value "Churn"
+//    [2] User is focused on: page: settings"
+
+// Custom labels
+ctx.toContext({ history: 3, currentLabel: 'Active', historyLabel: 'Previous' });
+```
+
+All `AskablePromptContextOptions` (presets, `excludeKeys`, `maxTokens`, etc.) are passed through.
+
+## Programmatic focus with `push()`
+
+Use `ctx.push(meta, text?)` to set focus from data alone — no DOM element required. This is the idiomatic solution for third-party libraries that render their own DOM (AG Grid, TanStack Table, chart libraries, etc.).
+
+```ts
+ctx.push({ widget: 'deals-table', rowIndex: 3, company: 'Acme' }, 'Acme Corp — Closed Won');
+
+// String meta
+ctx.push('highlighted-row');
+
+// No text
+ctx.push({ chart: 'revenue', period: 'Q3' });
+```
+
+`push()` fires the `'focus'` event, updates history, and respects sanitizers — just like `select()` and DOM interactions. The resulting focus has `source: 'push'` and `element: undefined`.
+
+See the [Third-Party Libraries guide](/guide/third-party-libraries) for full integration examples with AG Grid, TanStack Table, and chart libraries.
+
 ## Programmatic focus with `select()`
 
 Use `ctx.select(element)` to set focus without waiting for a user interaction. This is the foundation of the **"Ask AI" button pattern** — you set context explicitly when the user clicks a dedicated button, rather than relying on passive hover or focus.
@@ -125,8 +179,8 @@ chatPanel.addEventListener('close', () => ctx.clear());
 
 ```ts
 ctx.on('focus', (focus) => {
-  // fires on every new focus (click, hover, focus event, or select())
-  console.log('New focus:', focus.meta);
+  // fires on every new focus (click, hover, focus event, select(), or push())
+  console.log('New focus:', focus.meta, 'via', focus.source);
 });
 
 ctx.on('clear', () => {

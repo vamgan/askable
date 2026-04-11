@@ -113,9 +113,10 @@ Returns the current `AskableFocus`, or `null` if no element has been interacted 
 ```ts
 const focus = ctx.getFocus();
 if (focus) {
+  console.log(focus.source);    // 'dom' | 'select' | 'push'
   console.log(focus.meta);      // Record<string, unknown> | string
   console.log(focus.text);      // trimmed textContent
-  console.log(focus.element);   // HTMLElement
+  console.log(focus.element);   // HTMLElement | undefined (undefined for push())
   console.log(focus.timestamp); // Unix ms
 }
 ```
@@ -155,7 +156,7 @@ ctx.on('clear', () => console.log('Focus cleared'));
 
 | Event | Payload | Fires when |
 |---|---|---|
-| `'focus'` | `AskableFocus` | A `[data-askable]` element is clicked, hovered, focused, or `select()` is called |
+| `'focus'` | `AskableFocus` | A `[data-askable]` element is clicked, hovered, focused, `select()` is called, or `push()` is called |
 | `'clear'` | `null` | `ctx.clear()` is called |
 
 ---
@@ -168,6 +169,27 @@ Programmatically set focus to any `HTMLElement`. Fires the `'focus'` event and u
 const el = document.querySelector('[data-askable]') as HTMLElement;
 ctx.select(el);
 ```
+
+---
+
+### `push(meta, text?)`
+
+Set focus from data alone — no DOM element required. Fires the `'focus'` event and updates history. The resulting `AskableFocus` has `source: 'push'` and `element: undefined`.
+
+This is the idiomatic solution for libraries that manage their own DOM (AG Grid, TanStack Table, chart libraries, etc.) where you cannot add `data-askable` attributes to internal elements.
+
+```ts
+// Object meta
+ctx.push({ widget: 'deals-table', rowIndex: 3, company: 'Acme' }, 'Acme Corp — Closed Won');
+
+// String meta
+ctx.push('row-label');
+
+// No text
+ctx.push({ chart: 'revenue', period: 'Q3' });
+```
+
+Sanitizers (`sanitizeMeta`, `sanitizeText`) apply to `push()` the same way they apply to DOM-sourced focus.
 
 ---
 
@@ -215,6 +237,38 @@ ctx.toHistoryContext(5, { excludeKeys: ['_id'], maxTokens: 200 });
 ```
 
 **Returns:** `string` — `'No interaction history.'` when history is empty.
+
+---
+
+### `toContext(options?)`
+
+Combined current focus + history in a single prompt-ready string. When `history` is 0 or omitted, output is equivalent to `toPromptContext()` prefixed with a label.
+
+```ts
+ctx.toContext();
+// → "Current: User is focused on: — metric: revenue — value "Revenue""
+
+ctx.toContext({ history: 5 });
+// → "Current: User is focused on: — metric: revenue — value "Revenue"
+//
+//    Recent interactions:
+//    [1] User is focused on: — widget: chart — value "Churn"
+//    [2] User is focused on: — page: settings"
+
+ctx.toContext({ history: 3, currentLabel: 'Now', historyLabel: 'Before' });
+// Custom section labels
+```
+
+**Options (`AskableContextOutputOptions`):**
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `history` | `number` | `0` | Number of history entries to include |
+| `currentLabel` | `string` | `'Current'` | Label for the current focus section |
+| `historyLabel` | `string` | `'Recent interactions'` | Label for the history section |
+| _...all `AskablePromptContextOptions`_ | | | Passed through to serialization |
+
+**Returns:** `string`
 
 ---
 
