@@ -8,6 +8,7 @@ export type {
 export type {
   AskableContext,
   AskableContextOptions,
+  AskableContextOutputOptions,
   AskableEvent,
   AskableEventHandler,
   AskableEventMap,

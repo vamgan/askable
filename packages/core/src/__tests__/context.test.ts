@@ -881,6 +881,103 @@ describe('createAskableContext', () => {
     });
   });
 
+  describe('toContext() combined method', () => {
+    it('returns current focus with label when history is 0', () => {
+      const el = makeEl({ metric: 'revenue' }, '$2.3M');
+      const ctx = createAskableContext();
+      ctx.observe(document);
+      el.click();
+
+      const output = ctx.toContext();
+      expect(output).toMatch(/^Current:/);
+      expect(output).toContain('revenue');
+      expect(output).not.toContain('Recent interactions');
+
+      ctx.destroy();
+      cleanup(el);
+    });
+
+    it('includes history section when history > 0', () => {
+      const el1 = makeEl({ id: 'a' }, 'A');
+      const el2 = makeEl({ id: 'b' }, 'B');
+      const ctx = createAskableContext();
+      ctx.observe(document);
+      el1.click();
+      el2.click();
+
+      const output = ctx.toContext({ history: 5 });
+      expect(output).toContain('Current:');
+      expect(output).toContain('Recent interactions:');
+      expect(output).toContain('[1]');
+      expect(output).toContain('[2]');
+
+      ctx.destroy();
+      cleanup(el1);
+      cleanup(el2);
+    });
+
+    it('respects custom labels', () => {
+      const el = makeEl({ id: 'a' }, 'A');
+      const ctx = createAskableContext();
+      ctx.observe(document);
+      el.click();
+
+      ctx.push({ id: 'b' }, 'B');
+
+      const output = ctx.toContext({
+        history: 5,
+        currentLabel: 'Now',
+        historyLabel: 'Before',
+      });
+      expect(output).toMatch(/^Now:/);
+      expect(output).toContain('Before:');
+
+      ctx.destroy();
+      cleanup(el);
+    });
+
+    it('matches toPromptContext() when no history requested', () => {
+      const el = makeEl({ metric: 'churn' }, 'Churn Rate');
+      const ctx = createAskableContext();
+      ctx.observe(document);
+      el.click();
+
+      const toContextOutput = ctx.toContext();
+      const promptOutput = ctx.toPromptContext();
+      // toContext wraps with "Current: " prefix
+      expect(toContextOutput).toBe(`Current: ${promptOutput}`);
+
+      ctx.destroy();
+      cleanup(el);
+    });
+
+    it('respects maxTokens', () => {
+      const ctx = createAskableContext();
+      ctx.push({ description: 'A'.repeat(200) });
+
+      const output = ctx.toContext({ maxTokens: 10 });
+      expect(output).toContain('[truncated]');
+      expect(output.length).toBeLessThanOrEqual(40);
+
+      ctx.destroy();
+    });
+
+    it('passes prompt options through to serialization', () => {
+      const el = makeEl({ metric: 'churn', secret: 'x' }, 'Churn');
+      const ctx = createAskableContext();
+      ctx.observe(document);
+      el.click();
+
+      const output = ctx.toContext({ excludeKeys: ['secret'], includeText: false });
+      expect(output).toContain('churn');
+      expect(output).not.toContain('secret');
+      expect(output).not.toContain('Churn');
+
+      ctx.destroy();
+      cleanup(el);
+    });
+  });
+
   it('observe() is a no-op when called outside a browser environment', () => {
     const win = globalThis.window;
     Object.defineProperty(globalThis, 'window', { value: undefined, configurable: true });

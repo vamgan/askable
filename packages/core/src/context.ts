@@ -3,6 +3,7 @@ import { buildFocus, Observer } from './observer.js';
 import type {
   AskableContext,
   AskableContextOptions,
+  AskableContextOutputOptions,
   AskableEventHandler,
   AskableEventName,
   AskableFocus,
@@ -139,6 +140,27 @@ export class AskableContextImpl implements AskableContext {
     if (history.length === 0) return 'No interaction history.';
     const lines = history.map((focus, i) => `[${i + 1}] ${this.buildPromptString(focus, resolved)}`);
     const output = lines.join('\n');
+    return this.applyTokenBudget(output, resolved.maxTokens);
+  }
+
+  toContext(options?: AskableContextOutputOptions): string {
+    const { history: historyCount = 0, currentLabel = 'Current', historyLabel = 'Recent interactions', ...promptOptions } = options ?? {};
+    const resolved = this.resolveOptions(promptOptions);
+
+    const currentLine = `${currentLabel}: ${this.buildPromptString(this.currentFocus, resolved)}`;
+
+    if (historyCount <= 0) {
+      return this.applyTokenBudget(currentLine, resolved.maxTokens);
+    }
+
+    const historyEntries = this.getHistory(historyCount);
+    if (historyEntries.length === 0) {
+      return this.applyTokenBudget(currentLine, resolved.maxTokens);
+    }
+
+    const historyLines = historyEntries
+      .map((focus, i) => `[${i + 1}] ${this.buildPromptString(focus, resolved)}`);
+    const output = `${currentLine}\n\n${historyLabel}:\n${historyLines.join('\n')}`;
     return this.applyTokenBudget(output, resolved.maxTokens);
   }
 
