@@ -57,6 +57,7 @@ export default defineConfig({
         {
           text: 'Integrations',
           items: [
+            { text: 'Third-Party Libraries', link: '/guide/third-party-libraries' },
             { text: 'CopilotKit', link: '/guide/copilotkit' },
             { text: 'Python Packages', link: '/guide/python' },
           ],

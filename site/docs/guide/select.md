@@ -10,8 +10,9 @@ Passive observation (hover/click/focus) is great for automatically tracking what
 |---|---|
 | Passive observation | Always-on context — user browsing a dashboard, hover-to-ask interactions |
 | `select()` | "Ask AI" button next to a widget; right-click → explain; keyboard shortcut for current selection |
+| `push()` | Third-party libraries (AG Grid, charts) where you can't annotate DOM elements — see [Third-Party Libraries](/guide/third-party-libraries) |
 
-Use both together: passive observation sets context as the user browses, and `select()` lets them explicitly pin a specific element before asking a question.
+Use them together: passive observation sets context as the user browses, `select()` lets them explicitly pin a specific element, and `push()` covers libraries that own their DOM. Each sets a different `source` field (`'dom'`, `'select'`, `'push'`) so you can differentiate behavior.
 
 ## Basic usage
 

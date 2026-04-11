@@ -6,7 +6,9 @@ All types are exported from `@askable-ui/core`.
 import type {
   AskableContext,
   AskableContextOptions,
+  AskableContextOutputOptions,
   AskableFocus,
+  AskableFocusSource,
   AskableSerializedFocus,
   AskablePromptContextOptions,
   AskablePromptFormat,
@@ -47,18 +49,36 @@ interface AskableContextOptions {
 
 ---
 
+## `AskableFocusSource`
+
+Indicates how focus was initiated.
+
+```ts
+type AskableFocusSource = 'dom' | 'select' | 'push';
+```
+
+| Value | Set by |
+|---|---|
+| `'dom'` | User interaction (click, hover, keyboard focus) via the Observer |
+| `'select'` | `ctx.select(element)` — explicit "Ask AI" button patterns |
+| `'push'` | `ctx.push(meta, text)` — programmatic focus without a DOM element |
+
+---
+
 ## `AskableFocus`
 
 The shape of focus state objects returned by `getFocus()`, `getHistory()`, and passed to `'focus'` event handlers.
 
 ```ts
 interface AskableFocus {
+  /** How focus was initiated. */
+  source: AskableFocusSource;
   /** Parsed data-askable value. JSON → object; plain string → string. */
   meta: Record<string, unknown> | string;
   /** Trimmed textContent of the element. */
   text: string;
-  /** The DOM element itself. */
-  element: HTMLElement;
+  /** The DOM element. Undefined when set via push(). */
+  element?: HTMLElement;
   /** Unix timestamp (ms) when focus was set. */
   timestamp: number;
 }
@@ -111,6 +131,23 @@ interface AskablePromptContextOptions {
   prefix?: string;                 // Prefix in natural format. Default: 'User is focused on:'
   textLabel?: string;              // Label for text. Default: 'value'
   maxTokens?: number;              // Token budget (4 chars/token). Appends [truncated] if exceeded.
+}
+```
+
+---
+
+## `AskableContextOutputOptions`
+
+Options accepted by `toContext()`. Extends `AskablePromptContextOptions`.
+
+```ts
+interface AskableContextOutputOptions extends AskablePromptContextOptions {
+  /** Number of history entries to include. Default: 0 (current focus only). */
+  history?: number;
+  /** Label for the current focus section. Default: 'Current' */
+  currentLabel?: string;
+  /** Label for the history section. Default: 'Recent interactions' */
+  historyLabel?: string;
 }
 ```
 
