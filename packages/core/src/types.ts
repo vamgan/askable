@@ -156,6 +156,15 @@ export interface AskableSerializedFocus {
   timestamp: number;
 }
 
+export interface AskableContextOutputOptions extends AskablePromptContextOptions {
+  /** Number of history entries to include. Defaults to 0 (current focus only). */
+  history?: number;
+  /** Label for the current focus section. Defaults to "Current". */
+  currentLabel?: string;
+  /** Label for the history section. Defaults to "Recent interactions". */
+  historyLabel?: string;
+}
+
 export interface AskableContext {
   /** Observe a DOM subtree for [data-askable] elements */
   observe(root: HTMLElement | Document, options?: AskableObserveOptions): void;
@@ -181,6 +190,8 @@ export interface AskableContext {
   toPromptContext(options?: AskablePromptContextOptions): string;
   /** Serialize focus history to a prompt-ready string (newest first). Optional limit caps the entries returned. */
   toHistoryContext(limit?: number, options?: AskablePromptContextOptions): string;
+  /** Combined current focus + history in a single prompt-ready string */
+  toContext(options?: AskableContextOutputOptions): string;
   /** Clean up all listeners and observers */
   destroy(): void;
 }
