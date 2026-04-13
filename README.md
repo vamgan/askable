@@ -174,6 +174,8 @@ function RevenueCard() {
 }
 ```
 
+For a runnable mobile demo, see [`examples/react-native-expo`](./examples/react-native-expo).
+
 ### Vue 3
 
 ```bash
