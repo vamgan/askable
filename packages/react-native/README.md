@@ -7,6 +7,7 @@ React Native bindings for askable.
 - `useAskable()` hook backed by `@askable-ui/core`
 - `useAskableScreen()` hook for screen/navigation-aware context updates
 - `<Askable ctx={...}>` wrapper that turns `onPress` / `onLongPress` into context updates
+- Runnable Expo example in [`examples/react-native-expo`](../../examples/react-native-expo)
 
 ## Example
 

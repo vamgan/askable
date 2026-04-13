@@ -4,6 +4,8 @@ React Native bindings for askable-ui.
 
 This initial slice focuses on explicit mobile interactions: `useAskable()` provides a context backed by `@askable-ui/core`, `useAskableScreen()` lets you mirror screen focus into that context, and `<Askable />` turns `onPress` / `onLongPress` interactions into prompt-ready focus updates.
 
+A runnable Expo reference app lives in [`examples/react-native-expo`](https://github.com/askable-ui/askable/tree/main/examples/react-native-expo).
+
 ## Install
 
 ```bash
