@@ -2,7 +2,7 @@
 
 React Native bindings for askable-ui.
 
-This initial slice focuses on explicit mobile interactions: `useAskable()` provides a context backed by `@askable-ui/core`, and `<Askable />` turns `onPress` / `onLongPress` interactions into prompt-ready focus updates.
+This initial slice focuses on explicit mobile interactions: `useAskable()` provides a context backed by `@askable-ui/core`, `useAskableScreen()` lets you mirror screen focus into that context, and `<Askable />` turns `onPress` / `onLongPress` interactions into prompt-ready focus updates.
 
 ## Install
 
@@ -71,8 +71,43 @@ const { focus, promptContext, ctx } = useAskable();
 | `promptContext` | `string` | Natural-language context string for your LLM prompt |
 | `ctx` | `AskableContext` | Full context instance for `push()`, `clear()`, `toHistoryContext()`, etc. |
 
+## `useAskableScreen(options)`
+
+Pushes screen-level context into the shared `AskableContext` while a screen is active.
+
+```tsx
+import { useIsFocused } from '@react-navigation/native';
+import { useAskable, useAskableScreen } from '@askable-ui/react-native';
+
+function RevenueScreen() {
+  const isFocused = useIsFocused();
+  const { ctx } = useAskable();
+
+  useAskableScreen({
+    ctx,
+    active: isFocused,
+    meta: { screen: 'RevenueScreen' },
+    text: 'Revenue screen',
+  });
+
+  return null;
+}
+```
+
+**Options:**
+
+| Option | Type | Description |
+|---|---|---|
+| `ctx` | `AskableContext` | Reuse an existing context instead of creating a new one |
+| `meta` | `Record<string, unknown> \| string` | Screen metadata pushed when the screen is active |
+| `text` | `string` | Optional label stored alongside the screen metadata |
+| `active` | `boolean` | Whether the screen is currently focused. Default: `true` |
+| `clearOnBlur` | `boolean` | Clear the context when the screen becomes inactive. Default: `true` |
+| `name` / `viewport` / `events` | Core options | Forwarded when the hook creates its own context |
+
 ## Notes
 
-- This adapter currently covers press-driven context updates.
-- Navigation integration and ScrollView visibility tracking are planned follow-up work.
+- This adapter currently covers press-driven interactions plus lightweight screen-awareness.
+- `useAskableScreen()` is designed to pair with React Navigation's `useIsFocused()` or a similar focus signal.
+- ScrollView visibility tracking is still planned follow-up work.
 - Existing child `onPress` / `onLongPress` handlers are preserved and still run.
