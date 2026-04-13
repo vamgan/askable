@@ -23,7 +23,7 @@ features:
 
   - icon: ⚡
     title: Framework-native bindings
-    details: First-class hooks and components for React, Vue, and Svelte. Each binding is reactive, SSR-safe, and ships zero runtime dependencies beyond @askable-ui/core.
+    details: First-class hooks and components for React, React Native, Vue, and Svelte. Web bindings are reactive and SSR-safe; React Native ships a focused press-driven adapter on top of @askable-ui/core.
 
   - icon: 🎯
     title: Precision control
@@ -58,6 +58,23 @@ function Dashboard({ data }) {
   return (
     <Askable meta={{ metric: 'revenue', delta: data.delta }}>
       <RevenueChart data={data} />
+    </Askable>
+  );
+}
+```
+
+```tsx [React Native]
+import { Pressable, Text } from 'react-native';
+import { useAskable, Askable } from '@askable-ui/react-native';
+
+function RevenueCard() {
+  const { ctx, promptContext } = useAskable();
+
+  return (
+    <Askable ctx={ctx} meta={{ metric: 'revenue' }} text="Revenue card">
+      <Pressable>
+        <Text>Revenue</Text>
+      </Pressable>
     </Askable>
   );
 }

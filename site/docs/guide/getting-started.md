@@ -8,6 +8,10 @@
 npm install @askable-ui/react @askable-ui/core
 ```
 
+```bash [React Native]
+npm install @askable-ui/react-native @askable-ui/core
+```
+
 ```bash [Vue]
 npm install @askable-ui/vue @askable-ui/core
 ```
@@ -48,6 +52,23 @@ import { Askable } from '@askable-ui/react';
 </Askable>
 ```
 
+```tsx [React Native]
+import { Pressable, Text } from 'react-native';
+import { Askable, useAskable } from '@askable-ui/react-native';
+
+function RevenueCard() {
+  const { ctx } = useAskable();
+
+  return (
+    <Askable ctx={ctx} meta={{ metric: 'revenue', delta: '-12%', period: 'Q3' }} text="Revenue card">
+      <Pressable>
+        <Text>Revenue</Text>
+      </Pressable>
+    </Askable>
+  );
+}
+```
+
 ```vue [Vue]
 <Askable :meta="{ metric: 'revenue', delta: '-12%', period: 'Q3' }">
   <RevenueChart />
@@ -75,6 +96,13 @@ function App() {
   const { promptContext } = useAskable(); // starts observing automatically
   // ...
 }
+```
+
+```ts [React Native]
+import { useAskable } from '@askable-ui/react-native';
+
+const { promptContext } = useAskable();
+// promptContext updates when Askable-wrapped press targets are pressed or long-pressed
 ```
 
 ```ts [Vue]
