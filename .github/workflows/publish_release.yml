@@ -105,3 +105,9 @@ jobs:
           DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
         run: npm publish --access public --provenance --tag "$DIST_TAG"
         working-directory: packages/svelte
+
+      - name: Publish @askable-ui/react-native
+        env:
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --access public --provenance --tag "$DIST_TAG"
+        working-directory: packages/react-native
