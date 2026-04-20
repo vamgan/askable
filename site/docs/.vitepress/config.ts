@@ -81,6 +81,7 @@ export default defineConfig({
           items: [
             { text: 'Third-Party Libraries', link: '/guide/third-party-libraries' },
             { text: 'CopilotKit', link: '/guide/copilotkit' },
+            { text: 'Using Coding Agents', link: '/guide/agents' },
           ],
         },
         {
