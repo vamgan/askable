@@ -89,6 +89,46 @@ const { focus, promptContext, ctx } = useAskable();
 | `promptContext` | `string` | Natural-language context string for your LLM prompt |
 | `ctx` | `AskableContext` | Full context instance for `push()`, `clear()`, `toHistoryContext()`, etc. |
 
+### Shared vs private/custom contexts
+
+React Native differs from the web adapters: `useAskable()` creates a **private** context per hook call unless you provide `ctx`.
+
+- **Private default** — each `useAskable()` call gets its own `AskableContext`.
+- **Custom shared context** — create one context and pass it to `useAskable({ ctx })`, `<Askable ctx={ctx} />`, `useAskableScreen({ ctx })`, `useAskableScrollView({ ctx })`, and `useAskableVisibility({ ctx })` when one screen or app surface should share focus/history.
+- **Multiple isolated surfaces** — create separate contexts when different tabs/screens/chats should not affect each other.
+
+```tsx
+import { createAskableContext } from '@askable-ui/core';
+import { Askable, useAskable, useAskableScreen } from '@askable-ui/react-native';
+
+// Shared screen-level context
+const screenCtx = createAskableContext();
+
+function RevenueScreen() {
+  const askable = useAskable({ ctx: screenCtx });
+
+  useAskableScreen({
+    ctx: screenCtx,
+    meta: { screen: 'RevenueScreen' },
+    text: 'Revenue screen',
+  });
+
+  return (
+    <Askable ctx={screenCtx} meta={{ widget: 'revenue' }} text="Revenue card">
+      <Pressable>{/* ... */}</Pressable>
+    </Askable>
+  );
+}
+
+// Separate private context for another surface
+function SupportChatScreen() {
+  const support = useAskable();
+  return null;
+}
+```
+
+Use the private default for isolated screens. Provide `ctx` explicitly when multiple React Native helpers/components should cooperate on one Askable context.
+
 ## `useAskableScreen(options)`
 
 Pushes screen-level context into the shared `AskableContext` while a screen is active.
