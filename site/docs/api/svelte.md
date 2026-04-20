@@ -85,3 +85,31 @@ $: console.log($promptContext);
 // Click-only
 const store = createAskableStore({ events: ['click'] });
 ```
+
+### Shared vs private/custom contexts
+
+Svelte differs from the React/Vue adapters: `createAskableStore()` creates a **private** `AskableContext` per store by default.
+
+- **Private default** — every `createAskableStore()` call creates its own context and observer lifecycle.
+- **Custom provided context** — pass `ctx` when multiple components/stores should share one context.
+- **Per-surface isolation** — create separate stores or separate explicit contexts when different panels should not share focus/history.
+
+That means if two components both call `createAskableStore()` with no `ctx`, they will not automatically share focus.
+
+```ts
+import { createAskableContext } from '@askable-ui/core';
+import { createAskableStore } from '@askable-ui/svelte';
+
+// Private stores: isolated from each other
+const left = createAskableStore({ events: ['click'] });
+const right = createAskableStore({ events: ['click'] });
+
+// Shared explicit context across stores/components
+const sharedCtx = createAskableContext();
+sharedCtx.observe(document, { events: ['hover'] });
+
+const chartStore = createAskableStore({ ctx: sharedCtx });
+const chatStore = createAskableStore({ ctx: sharedCtx });
+```
+
+Use the private default for isolated widgets. Pass a shared `ctx` when multiple Svelte components need to agree on one Askable focus/history stream.
