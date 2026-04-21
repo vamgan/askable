@@ -139,3 +139,37 @@ export function MetricCard({ data, onOpenChat }) {
 | **Explicit** (`ctx.select()` on button click) | Chat opens on demand; user should control when context is captured |
 
 Both patterns can coexist — use passive observation for the general context and `select()` for specific "Ask AI about this" flows.
+
+## Streaming updates during long-running agent responses
+
+If a Copilot action can continue while the user clicks elsewhere, subscribe to Askable context and feed a debounced combined context string into `useCopilotReadable`.
+
+```tsx
+'use client';
+import { useEffect, useState } from 'react';
+import { useAskable } from '@askable-ui/react';
+import { useCopilotReadable } from '@copilotkit/react-core';
+
+export function LiveCopilotContext() {
+  const { ctx } = useAskable();
+  const [liveContext, setLiveContext] = useState(() => ctx.toContext({ history: 3 }));
+
+  useEffect(() => {
+    return ctx.subscribe((context) => {
+      setLiveContext(context);
+    }, {
+      history: 3,
+      debounce: 100,
+    });
+  }, [ctx]);
+
+  useCopilotReadable({
+    description: 'Current and recent Askable UI context',
+    value: liveContext,
+  });
+
+  return null;
+}
+```
+
+This keeps CopilotKit aligned with the latest user focus without flooding it on every micro-movement.

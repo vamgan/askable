@@ -132,6 +132,62 @@ const { messages, input, handleSubmit } = useChat({
 
 :::
 
+### Streaming updates during generation
+
+When a response is already streaming, you can keep the server-side session fresh by subscribing to Askable context changes and posting debounced updates tied to the active chat request.
+
+```tsx
+'use client';
+import { useEffect, useMemo, useRef } from 'react';
+import { useChat } from 'ai/react';
+import { useAskable } from '@askable-ui/react';
+
+export function StreamingChat() {
+  const { ctx, promptContext } = useAskable();
+  const requestIdRef = useRef<string | null>(null);
+
+  const chatBody = useMemo(() => ({
+    requestId: crypto.randomUUID(),
+    uiContext: promptContext,
+    historyContext: ctx.toHistoryContext(5),
+  }), [ctx, promptContext]);
+
+  const { status, ...chat } = useChat({
+    api: '/api/chat',
+    body: chatBody,
+    onResponse() {
+      requestIdRef.current = chatBody.requestId;
+    },
+    onFinish() {
+      requestIdRef.current = null;
+    },
+  });
+
+  useEffect(() => {
+    if (status !== 'streaming') return;
+
+    return ctx.subscribe(async (context) => {
+      if (!requestIdRef.current) return;
+      await fetch('/api/chat/context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: requestIdRef.current,
+          context,
+        }),
+      });
+    }, {
+      history: 5,
+      debounce: 100,
+    });
+  }, [ctx, status]);
+
+  return <ChatUI {...chat} />;
+}
+```
+
+On the server, store these incremental updates by `requestId` and let your streaming route read the latest Askable context between model/tool steps.
+
 ## Anthropic SDK
 
 ```ts

@@ -134,6 +134,17 @@ export interface AskablePromptContextOptions {
 /**
  * Options for creating an AskableContext.
  */
+export interface AskableSubscribeOptions extends AskableContextOutputOptions {
+  /**
+   * Debounce delay in ms applied to subscription callbacks.
+   * Useful when streaming LLM responses should not be updated on every rapid focus change.
+   * Defaults to 0 (no debounce).
+   */
+  debounce?: number;
+}
+
+export type AskableContextSubscriber = (context: string, focus: AskableFocus | null) => void;
+
 export interface AskableContextOptions {
   /**
    * Optional name for reusing a shared context instance across the same page/runtime.
@@ -239,6 +250,8 @@ export interface AskableContext {
   toViewportContext(options?: AskablePromptContextOptions): string;
   /** Combined current focus + history in a single prompt-ready string */
   toContext(options?: AskableContextOutputOptions): string;
+  /** Subscribe to serialized context updates for streaming/chat integrations. Returns an unsubscribe function. */
+  subscribe(callback: AskableContextSubscriber, options?: AskableSubscribeOptions): () => void;
   /** Clean up all listeners and observers */
   destroy(): void;
 }

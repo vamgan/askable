@@ -9,6 +9,8 @@ export type {
   AskableContext,
   AskableContextOptions,
   AskableContextOutputOptions,
+  AskableContextSubscriber,
+  AskableSubscribeOptions,
   AskableEvent,
   AskableEventHandler,
   AskableEventMap,

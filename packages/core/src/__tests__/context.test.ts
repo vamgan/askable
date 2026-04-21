@@ -49,6 +49,7 @@ class MockIntersectionObserver {
 
 afterEach(() => {
   MockIntersectionObserver.instances = [];
+  vi.useRealTimers();
 });
 
 describe('createAskableContext', () => {
@@ -84,8 +85,86 @@ describe('createAskableContext', () => {
     expect(typeof (ctx as any).serializeFocus).toBe('function');
     expect(typeof (ctx as any).getVisibleElements).toBe('function');
     expect(typeof (ctx as any).toViewportContext).toBe('function');
+    expect(typeof ctx.subscribe).toBe('function');
     expect(typeof ctx.destroy).toBe('function');
     ctx.destroy();
+  });
+
+  it('subscribes to serialized context updates for focus and clear events', () => {
+    const first = makeEl({ widget: 'table' }, 'Table');
+    const second = makeEl({ widget: 'chart' }, 'Chart');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    const onContext = vi.fn();
+    const unsubscribe = ctx.subscribe(onContext, { history: 1, currentLabel: 'Now' });
+
+    first.click();
+    second.click();
+    ctx.clear();
+
+    expect(onContext).toHaveBeenCalledTimes(3);
+    expect(onContext.mock.calls[0][0]).toContain('Now: User is focused on: — widget: table — value "Table"');
+    expect(onContext.mock.calls[0][1]?.meta).toEqual({ widget: 'table' });
+    expect(onContext.mock.calls[1][0]).toContain('Recent interactions:');
+    expect(onContext.mock.calls[1][1]?.meta).toEqual({ widget: 'chart' });
+    expect(onContext.mock.calls[2][0]).toContain('Now: No UI element is currently focused.');
+    expect(onContext.mock.calls[2][1]).toBeNull();
+
+    unsubscribe();
+    ctx.destroy();
+    cleanup(first);
+    cleanup(second);
+  });
+
+  it('debounces subscribed context updates', () => {
+    vi.useFakeTimers();
+
+    const first = makeEl({ widget: 'table' }, 'Table');
+    const second = makeEl({ widget: 'chart' }, 'Chart');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    const onContext = vi.fn();
+    ctx.subscribe(onContext, { debounce: 50 });
+
+    first.click();
+    second.click();
+
+    expect(onContext).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(49);
+    expect(onContext).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(onContext).toHaveBeenCalledTimes(1);
+    expect(onContext.mock.calls[0][0]).toContain('widget: chart');
+    expect(onContext.mock.calls[0][1]?.meta).toEqual({ widget: 'chart' });
+
+    ctx.destroy();
+    cleanup(first);
+    cleanup(second);
+  });
+
+  it('stops subscribed context updates after unsubscribe', () => {
+    const first = makeEl({ widget: 'table' }, 'Table');
+    const second = makeEl({ widget: 'chart' }, 'Chart');
+    const ctx = createAskableContext();
+    ctx.observe(document);
+
+    const onContext = vi.fn();
+    const unsubscribe = ctx.subscribe(onContext);
+
+    first.click();
+    expect(onContext).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    second.click();
+    expect(onContext).toHaveBeenCalledTimes(1);
+
+    ctx.destroy();
+    cleanup(first);
+    cleanup(second);
   });
 
   it('getFocus() returns null before any interaction', () => {

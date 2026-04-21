@@ -236,6 +236,28 @@ ctx.clear();
 // → focus is null, 'clear' event fires
 ```
 
+#### `subscribe(callback, options?): () => void`
+
+Subscribe to serialized context updates for streaming LLM integrations. The callback receives the latest `ctx.toContext()` string plus the current `AskableFocus | null`. Returns an unsubscribe function.
+
+```ts
+const unsubscribe = ctx.subscribe((context, focus) => {
+  streamTransport.send({
+    type: 'ui-context',
+    context,
+    focusedMeta: focus?.meta ?? null,
+  });
+}, {
+  history: 3,
+  debounce: 75,
+});
+
+// later
+unsubscribe();
+```
+
+Use `debounce` to coalesce rapid focus changes while a response is streaming.
+
 #### `select(element: HTMLElement): void`
 
 Programmatically set focus to any element, as if the user had interacted with it. Useful for "Ask AI" buttons that explicitly set context before opening a chat.
