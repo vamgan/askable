@@ -4,6 +4,7 @@ import type {
   AskableContext,
   AskableContextOptions,
   AskableContextOutputOptions,
+  AskableContextSubscriber,
   AskableEventHandler,
   AskableEventName,
   AskableFocus,
@@ -14,6 +15,7 @@ import type {
   AskablePushOptions,
   AskableSerializedFocus,
   AskableSerializedFocusSegment,
+  AskableSubscribeOptions,
 } from './types.js';
 
 const PRESETS: Record<AskablePromptPreset, AskablePromptContextOptions> = {
@@ -36,6 +38,7 @@ export class AskableContextImpl implements AskableContext {
   private textExtractor: ((el: HTMLElement) => string) | undefined;
   private sanitizeMetaFn: ((meta: Record<string, unknown>) => Record<string, unknown>) | undefined;
   private sanitizeTextFn: ((text: string) => string) | undefined;
+  private subscriptions = new Set<() => void>();
 
   constructor(options?: AskableContextOptions) {
     this.textExtractor = options?.textExtractor;
@@ -315,8 +318,60 @@ export class AskableContextImpl implements AskableContext {
     return this.applyTokenBudget(output, resolved.maxTokens);
   }
 
+  subscribe(callback: AskableContextSubscriber, options?: AskableSubscribeOptions): () => void {
+    const { debounce = 0, ...contextOptions } = options ?? {};
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
+
+    const emitContext = () => {
+      if (!active) return;
+      const focus = this.currentFocus;
+      const scopedFocus = this.matchesScope(focus, contextOptions.scope) ? focus : null;
+      callback(this.toContext(contextOptions), scopedFocus);
+    };
+
+    const schedule = () => {
+      if (!active) return;
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      if (debounce > 0) {
+        timer = setTimeout(() => {
+          timer = null;
+          emitContext();
+        }, debounce);
+        return;
+      }
+      emitContext();
+    };
+
+    const onFocus = () => schedule();
+    const onClear = () => schedule();
+
+    this.on('focus', onFocus);
+    this.on('clear', onClear);
+
+    const unsubscribe = () => {
+      if (!active) return;
+      active = false;
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      this.off('focus', onFocus);
+      this.off('clear', onClear);
+      this.subscriptions.delete(unsubscribe);
+    };
+
+    this.subscriptions.add(unsubscribe);
+    return unsubscribe;
+  }
+
   destroy(): void {
     this.unobserve();
+    this.subscriptions.forEach((unsubscribe) => unsubscribe());
+    this.subscriptions.clear();
     this.emitter.clear();
     this.currentFocus = null;
     this.history = [];
