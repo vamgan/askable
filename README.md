@@ -27,6 +27,10 @@
 </p>
 
 <p align="center">
+  <video src="https://github.com/user-attachments/assets/dfc6a889-e093-452d-8259-e7123b446d24" autoplay loop muted playsinline width="720"></video>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
   <a href="#why">Why</a> &nbsp;·&nbsp;
   <a href="#how-it-works">How it works</a> &nbsp;·&nbsp;
@@ -36,10 +40,6 @@
   <a href="https://askable-ui.com/docs/">Docs</a> &nbsp;·&nbsp;
   <a href="https://askable-ui.com/docs/guide/agents">Agent Templates</a> &nbsp;·&nbsp;
   <a href="https://askable-mu.vercel.app/">Live Demo</a>
-</p>
-
-<p align="center">
-  <video src="https://github.com/user-attachments/assets/1d849070-d486-471d-9fcb-ffafe90c485a" autoplay loop muted playsinline width="720"></video>
 </p>
 
 ---
