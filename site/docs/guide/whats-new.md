@@ -1,6 +1,6 @@
-# What’s New in v6.1.0
+# What’s New in v6.1.1
 
-askable-ui v6.1.0 rolls up the most recent improvements across the core library, React bindings, and docs.
+askable-ui v6.1.1 rolls up the most recent improvements across the core library, React bindings, and docs.
 
 ## Highlights
 
@@ -81,7 +81,7 @@ If you are integrating Askable into an AI copilot, start here:
 
 ## Version note
 
-The current published docs track **v6.1.0** at both:
+The current published docs track **v6.1.1** at both:
 
 - `/docs/`
-- `/docs/v6.1.0/`
+- `/docs/v6.1.1/`
