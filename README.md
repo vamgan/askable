@@ -50,15 +50,6 @@
 npm install @askable-ui/react
 ```
 
-Want a runnable Askable + CopilotKit starter app instead?
-
-```bash
-npx create-askable-app my-app
-cd my-app
-npm install
-npm run dev
-```
-
 ```tsx
 import { Askable, useAskable } from '@askable-ui/react';
 
@@ -75,6 +66,16 @@ function Dashboard({ kpi }) {
 ```
 
 That's it. `promptContext` updates automatically as the user interacts. Pass it to any LLM.
+
+Need a runnable starter app with Askable and CopilotKit?
+
+```bash
+npx create-askable-app my-app
+cd my-app
+npm install
+npm run dev
+```
+
 
 ---
 
