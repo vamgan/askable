@@ -1,12 +1,22 @@
-# What’s New in v0.17.0
+# What’s New in v0.17.1
 
-askable-ui v0.17.0 adds `@askable-ui/bridge`, a provider-neutral way to move
-Context packets from the page into app chat, browser extensions, iframes, local
-MCP companions, and webhooks. It also keeps the release pipeline clean by
-covering the new package in preview/release publishing and refreshing audit
-dependencies that were blocking CI.
+askable-ui v0.17.1 completes the bridge package release after npm rejected the first
+new-package trusted-publisher publish. It keeps all Askable packages aligned and
+makes `@askable-ui/bridge` installable from npm.
 
 ## Highlights
+
+### Bridge package availability
+
+`@askable-ui/bridge` is now available from npm at the same version line as the
+rest of Askable. Use this patch if you want to install the provider-neutral
+bridge package.
+
+```bash
+npm install @askable-ui/bridge@^0.17.1
+```
+
+## Also in v0.17.0
 
 ### Provider-neutral context bridge
 
@@ -70,14 +80,14 @@ This release also:
 Keep all Askable packages on the same release line:
 
 ```bash
-npm install @askable-ui/core@^0.17.0 @askable-ui/react@^0.17.0
-npm install @askable-ui/bridge@^0.17.0
+npm install @askable-ui/core@^0.17.1 @askable-ui/react@^0.17.1
+npm install @askable-ui/bridge@^0.17.1
 ```
 
 The current docs are published at both:
 
 - `/docs/`
-- `/docs/v0.17.0/`
+- `/docs/v0.17.1/`
 
 ## Also in v0.16.0
 
