@@ -164,6 +164,43 @@ There's also a fetch-compatible HTTP handler (`createAskableMcpWebHandler`) for 
 
 ---
 
+## Bridge — your own chat UI, extensions, iframes, and webhooks
+
+Not every assistant is an MCP client. `@askable-ui/bridge` moves the same Context packet to wherever the user actually asks the question, through provider-neutral transports:
+
+```ts
+import { createAskableBridge, createFunctionTransport } from '@askable-ui/bridge';
+
+const bridge = createAskableBridge({
+  provider: {
+    getPacket: () => ctx.toContextPacketAsync(),
+    formatPrompt: () => ctx.toContextAsync(),
+  },
+  transports: [
+    createFunctionTransport(({ payload }) =>
+      sendChatMessage({ question: payload.question, context: payload.prompt, packet: payload.packet }),
+    ),
+  ],
+  requireRedacted: true,
+});
+
+await bridge.sendPrompt('Why did this account churn?');
+```
+
+Swap the transport, not the capture code: `createPostMessageTransport()` for iframes, `createBrowserExtensionTransport()` for `chrome.runtime`, `createHttpTransport()` for a webhook or backend. Every transport receives the same versioned envelope, guarded on the far side by `isAskableBridgeEnvelope()`.
+
+| Need | Use |
+|---|---|
+| Send context into your own chat UI, extension, iframe, or webhook | `@askable-ui/bridge` |
+| Expose context as MCP tools and resources for Claude, ChatGPT connectors, or Cursor | `@askable-ui/mcp` |
+| Define or validate the open packet format | `@askable-ui/context` |
+
+Browser-local MCP setups usually use both: the bridge moves the packet out of the page, and `@askable-ui/mcp` exposes it to the local MCP client.
+
+→ **[Bridge guide](https://askable-ui.com/docs/guide/bridge)**
+
+---
+
 ## How it works
 
 **1. Annotate** — your existing data, on your existing elements
@@ -783,6 +820,7 @@ Or open [`examples/vanilla-chat/index.html`](./examples/vanilla-chat/index.html)
 - **Explicit capture** — region, circle, lasso, and text-selection capture for user-directed AI
 - **Privacy & redaction** — strip sensitive fields before data leaves the page
 - **MCP bridge** — expose any context as `get_current_context` and `format_context_for_prompt` MCP tools
+- **Context transports** — send the same packet to app chat, iframes, extensions, or webhooks with `@askable-ui/bridge`
 - **Ask AI button** — `useAskableAgent()` packages context + question into a request payload in one call
 - **Streaming chat** — `useAskableChat()` multi-turn conversation with automatic context injection per turn
 - **Streaming primitives** — `useAskableStream()` for one-shot streaming with `abort()`, `content`, and status
