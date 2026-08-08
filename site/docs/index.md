@@ -40,7 +40,7 @@ features:
     details: toPromptContext() returns a plain string, while toContextPacket() returns structured Context packets for app chat, browser extensions, MCP clients, and agent runtimes.
 ---
 
-> Current npm release: **v0.17.0**.
+> Current npm release: **v0.17.1**.
 >
 > Need a breaking-release upgrade path? See [Migration Guides](/guide/migrations). Versioned docs are available at `/docs/<version>/`.
 
@@ -59,7 +59,7 @@ features:
   </video>
 </div>
 
-## Latest in v0.17.0
+## Latest in v0.17.1
 
 - **Provider-neutral bridge package** — new `@askable-ui/bridge` sends Context packets to app chat, browser extensions, `postMessage` targets, local MCP companions, and HTTP endpoints without binding Askable to one chatbot SDK
 - **Bridge docs and API reference** — new guide/API pages show function, browser extension, iframe, webhook, and MCP handoff patterns
@@ -125,7 +125,7 @@ Every pattern can produce a prompt string with `toPromptContext()` or a structur
 
 Start here:
 
-- [What’s New in v0.17.0](/guide/whats-new)
+- [What’s New in v0.17.1](/guide/whats-new)
 - [Context Packets](/guide/context)
 - [The Context Packet Protocol (spec)](/guide/protocol)
 - [Bridge context to chat](/guide/bridge)
