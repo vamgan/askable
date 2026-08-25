@@ -146,11 +146,11 @@
     "@askable-ui/core": "^0.17.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@testing-library/svelte": "^5.4.2",
     "jsdom": "^29.1.1",
-    "svelte": "^5.56.8",
+    "svelte": "^5.56.10",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
