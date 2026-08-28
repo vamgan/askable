@@ -1,0 +1,19 @@
+{
+  "name": "@askable-ui/example-browser-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@askable-ui/bridge": "^0.17.1",
+    "@askable-ui/core": "^0.17.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.8",
+    "@types/node": "^22.10.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2"
+  }
+}

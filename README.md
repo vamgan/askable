@@ -855,6 +855,7 @@ Or open [`examples/vanilla-chat/index.html`](./examples/vanilla-chat/index.html)
 | [`angular-dashboard`](./examples/angular-dashboard/) | Angular 19 · standalone | Angular signals + injectable services |
 | [`nextjs-app-router`](./examples/nextjs-app-router/) | Next.js 15 · App Router | Vercel AI SDK streaming chat with real-time UI context |
 | [`mcp-server`](./examples/mcp-server/) | Node.js · Express | Standalone MCP server — connect Claude Desktop in 5 min |
+| [`browser-extension`](./examples/browser-extension/) | Manifest V3 · Vite | No-site-code companion for selected, focused, and full-page context |
 | [`vanilla-chat`](./examples/vanilla-chat/) | Vanilla JS | Zero-install HTML demo, opens in a browser |
 | [`react-native-expo`](./examples/react-native-expo/) | React Native · Expo | Mobile scroll context |
 
@@ -873,7 +874,7 @@ Or open [`examples/vanilla-chat/index.html`](./examples/vanilla-chat/index.html)
 
 ## Using with coding agents
 
-[`AGENTS.md`](./AGENTS.md) has copy-pasteable instructions for Claude, Cursor, Codex, and similar tools. Drop it into your project root and your coding agent will annotate elements correctly, avoid common mistakes, and wire up the full context pipeline.
+[`AGENTS.md`](./AGENTS.md) has copy-pasteable instructions for Claude, Cursor, and similar tools. Drop it into your project root and your coding agent will annotate elements correctly, avoid common mistakes, and wire up the full context pipeline.
 
 ---
 
