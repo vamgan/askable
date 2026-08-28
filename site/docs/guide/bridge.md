@@ -85,6 +85,12 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 ```
 
+For a complete Manifest V3 extension, see the
+[Browser Extension Companion example](/examples/browser-extension). It captures
+selected text, the last focused DOM element, or bounded full-page context from
+any normal web page, then sends the same bridge envelope to the extension
+background worker.
+
 ## Iframe or same-window bridge
 
 Use `postMessage` when a chat surface is embedded in an iframe or a sibling
