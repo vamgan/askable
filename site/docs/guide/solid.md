@@ -172,6 +172,7 @@ try {
 | `useAskableErrorSource` | `errors` | Recent application errors |
 | `useAskableNotificationSource` | `notifications` | Active toasts and alerts |
 | `useAskableCartSource` | `cart` | Shopping cart state |
+| `useAskableDialogSource` | `dialogs` | Open modals, drawers, and popovers |
 | `useAskableMultistepSource` | `multistep` | Wizard/stepper progress |
 | `useAskableMediaSource` | `media` | Audio/video playback state |
 | `useAskableScrollSource` | `scroll` | Scroll position and direction |

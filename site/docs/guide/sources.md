@@ -96,6 +96,7 @@ You rarely write a source by hand. `@askable-ui/core` ships factories for the co
 | `createAskablePageSource` | `useAskablePageSource` | Title, URL, headings, links |
 | `createAskableErrorSource` | `useAskableErrorSource` | Recent application errors |
 | `createAskableNotificationSource` | `useAskableNotificationSource` | Active toasts and alerts |
+| `createAskableDialogSource` | `useAskableDialogSource` | Open modals, drawers, and popovers |
 
 …plus device/environment sources (`theme`, `network`, `battery`, `geolocation`, `locale`, `permission`, `media`, `scroll`, `storage`, `clipboard`, `idle`, `time`, and more). See each [framework guide](/guide/react) for the full hook list.
 

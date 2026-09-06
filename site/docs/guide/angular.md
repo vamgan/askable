@@ -216,6 +216,7 @@ All sources follow the same `inject → init()` pattern:
 | `AskableNavigationSourceService` | Route history |
 | `AskableUserSourceService` | Authenticated user info |
 | `AskableNotificationSourceService` | Active toasts and alerts |
+| `AskableDialogSourceService` | Open modals, drawers, and popovers |
 | `AskableErrorSourceService` | Recent errors |
 | `AskableLoadingSourceService` | Loading/pending states |
 | `AskableSearchSourceService` | Search query and results |

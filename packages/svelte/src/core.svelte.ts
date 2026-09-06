@@ -17,6 +17,7 @@ export { useAskableDOMSource } from './useAskableDOMSource.svelte.ts';
 export { useAskableStorageSource } from './useAskableStorageSource.svelte.ts';
 export { useAskableNotificationSource } from './useAskableNotificationSource.svelte.ts';
 export { useAskableCartSource } from './useAskableCartSource.svelte.ts';
+export { useAskableDialogSource } from './useAskableDialogSource.svelte.ts';
 export { useAskableMultistepSource } from './useAskableMultistepSource.svelte.ts';
 export { useAskableRegionCapture } from './useAskableRegionCapture.svelte.ts';
 export { useAskableTextSelectionCapture } from './useAskableTextSelectionCapture.svelte.ts';

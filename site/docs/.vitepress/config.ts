@@ -78,6 +78,7 @@ export default defineConfig({
             { text: 'Region & Text Capture', link: '/guide/capture' },
             { text: 'Custom Sources', link: '/guide/sources' },
             { text: 'Cart & Multistep Sources', link: '/guide/cart-multistep' },
+            { text: 'Dialog & Overlay Source', link: '/guide/dialogs' },
             { text: 'Prompt Serialization', link: '/guide/serialization' },
             { text: 'Context Packets', link: '/guide/context' },
             { text: 'The Context Packet Protocol', link: '/guide/protocol' },

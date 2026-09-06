@@ -1163,3 +1163,76 @@ ctx.registerSource('cart', source);
 | `couponCode` | `string \| null?` | Coupon code |
 
 Framework wrappers expose `addItem`, `removeItem`, `updateQuantity`, `setItems`, `setTotals`, and `clearCart` helpers on top of the registered source.
+
+---
+
+## `createAskableDialogSource(options)`
+
+Factory for dialog/overlay context. Tracks the stack of open modals, drawers, sheets, popovers, and menus so the assistant answers about the overlay in front of the user instead of the page behind it.
+
+```ts
+import { buildDialogSnapshot, createAskableDialogSource } from '@askable-ui/core';
+
+const snap = buildDialogSnapshot([
+  { id: 'filters', title: 'Filters', kind: 'drawer' },
+  { id: 'confirm', title: 'Delete workspace', kind: 'alertdialog', actions: ['Cancel', 'Delete'] },
+]);
+// snap.topmost.id  === 'confirm'
+// snap.isBlocking  === true
+// snap.isDestructive === true   (inferred from the action labels)
+
+const source = createAskableDialogSource({ getSnapshot: () => snap });
+ctx.registerSource('dialogs', source);
+```
+
+**`AskableDialogEntry` fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Stable overlay id |
+| `title` | `string \| null?` | Heading or label |
+| `kind` | `AskableDialogKind?` | `dialog`, `alertdialog`, `drawer`, `sheet`, `popover`, `menu`, or your own (default `'dialog'`) |
+| `modal` | `boolean?` | Blocks the page behind it (default `true`, except popovers/menus/tooltips) |
+| `description` | `string \| null?` | Supporting copy, such as the confirmation question |
+| `actions` | `string[]?` | Action labels in DOM order |
+| `destructive` | `boolean?` | Confirms a destructive action — inferred from the title and action labels when omitted |
+| `trigger` | `string \| null?` | What opened it |
+| `openedAt` | `string \| null?` | ISO timestamp |
+| `meta` | `Record<string, unknown>?` | Any extra data |
+
+**`AskableDialogSourceSnapshot` fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `open` | `AskableDialogEntry[]` | Open overlays, bottom of the stack first |
+| `topmost` | `AskableDialogEntry \| null` | The overlay the user is looking at |
+| `openCount` | `number` | Number of open overlays |
+| `hasOpenDialog` | `boolean` | `true` when anything is open |
+| `isBlocking` | `boolean` | `true` when a modal overlay blocks the page |
+| `isDestructive` | `boolean` | `true` when the topmost overlay confirms a destructive action |
+| `lastClosed` | `AskableDialogClosedEntry \| null` | Most recently closed overlay and why |
+| `lastChangedAt` | `string \| null` | ISO timestamp of the last open/close |
+
+### `collectAskableDialogs(root?)`
+
+Scans the DOM for open overlays — `dialog[open]`, `[role="dialog"]`, `[role="alertdialog"]`, `[aria-modal="true"]`, and open popovers — in document order, so the last entry is the topmost. Hidden, `aria-hidden`, and `display: none` elements are skipped. Titles come from `aria-label`, `aria-labelledby`, or the first heading; descriptions from `aria-describedby`; actions from the buttons inside.
+
+Override what is detected with `data-askable-dialog-id`, `data-askable-dialog-title`, and `data-askable-dialog-kind`.
+
+```ts
+import { collectAskableDialogs } from '@askable-ui/core';
+
+collectAskableDialogs(); // [{ id: 'confirm', title: 'Delete workspace', … }]
+```
+
+### `createAskableDialogObserver(options)`
+
+Watches the DOM and reports the open stack as it changes — a `MutationObserver` plus native `toggle` events, deduped so unrelated DOM churn does not fire it. Reports the initial stack synchronously and returns `{ refresh, getEntries, stop }`.
+
+```ts
+const observer = createAskableDialogObserver({ onChange: (entries) => setDialogs(entries) });
+// later
+observer.stop();
+```
+
+Framework wrappers expose `openDialog`, `closeDialog`, `closeTopmost`, `setDialogs`, and `closeAll` helpers on top of the registered source, plus an `autoDetect` option that wires the observer for you.

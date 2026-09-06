@@ -1711,6 +1711,85 @@ useAskableDOMSource({
 
 ---
 
+## Dialog & overlay source — useAskableDialogSource
+
+`useAskableDialogSource` reports which modal, drawer, sheet, popover, or menu is open. Without it an assistant answers about the page behind the overlay — it cannot see that a confirmation dialog is blocking everything.
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | `"dialogs"` | Source registration id |
+| `open` | `AskableDialogEntry[]` | `[]` | Overlays already open on mount, bottom of the stack first |
+| `autoDetect` | `boolean` | `false` | Read open overlays from the DOM instead of calling the actions by hand |
+| `root` | `ParentNode` | `document` | Where auto-detection scans |
+| `kind` | `string` | `"dialog"` | Custom source category |
+
+Actions: `openDialog(entry)`, `closeDialog(id, reason?)`, `closeTopmost(reason?)`, `setDialogs(entries)`, `closeAll(reason?)`. Use either the actions or `autoDetect` — with auto-detection on, the DOM is the source of truth and manual calls are overwritten on the next mutation.
+
+### Driving it from your own dialog state
+
+```tsx
+import { useAskableDialogSource } from '@askable-ui/react';
+
+const { openDialog, closeDialog } = useAskableDialogSource();
+
+function confirmDelete(workspace: Workspace) {
+  openDialog({
+    id: 'delete-workspace',
+    title: `Delete ${workspace.name}`,
+    kind: 'alertdialog',
+    description: 'This removes every project in the workspace.',
+    actions: ['Cancel', 'Delete workspace'],
+  });
+}
+
+// on dismiss
+closeDialog('delete-workspace', 'cancel');
+```
+
+`destructive` is inferred from the title and action labels (delete, remove, revoke, discard, …). Set it explicitly to override the guess.
+
+### Zero-config auto-detection
+
+```tsx
+// Detects <dialog open>, [role="dialog"], [role="alertdialog"],
+// [aria-modal="true"], and open popovers — no wiring per dialog.
+useAskableDialogSource({ autoDetect: true });
+```
+
+Override what a detected overlay reports with data attributes:
+
+```html
+<div role="dialog"
+     data-askable-dialog-id="checkout"
+     data-askable-dialog-title="Checkout"
+     data-askable-dialog-kind="sheet">
+```
+
+### Resolved snapshot
+
+```json
+{
+  "open": [
+    { "id": "filters", "title": "Filters", "kind": "drawer", "modal": true },
+    { "id": "delete-workspace", "title": "Delete Acme", "kind": "alertdialog",
+      "modal": true, "destructive": true, "actions": ["Cancel", "Delete workspace"] }
+  ],
+  "topmost": { "id": "delete-workspace", "title": "Delete Acme", "kind": "alertdialog" },
+  "openCount": 2,
+  "hasOpenDialog": true,
+  "isBlocking": true,
+  "isDestructive": true,
+  "lastClosed": null,
+  "lastChangedAt": "2026-09-06T12:00:00.000Z"
+}
+```
+
+Other frameworks: `useAskableDialogSource` in Vue, Svelte 5, and Solid; `AskableDialogSourceService` (call `init({ autoDetect: true })`) in Angular.
+
+---
+
 ## Customising this file for your project
 
 Before committing this file to your own repo, update the sections that are product-specific:

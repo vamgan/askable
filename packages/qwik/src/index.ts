@@ -43,6 +43,8 @@ export type { UseAskableNotificationSourceOptions, UseAskableNotificationSourceR
 
 export { useAskableCartSource } from './useAskableCartSource.js';
 export type { UseAskableCartSourceOptions, UseAskableCartSourceResult, AskableCartItem, AskableCartSourceSnapshot, AskableCartTotals } from './useAskableCartSource.js';
+export { useAskableDialogSource } from './useAskableDialogSource.js';
+export type { UseAskableDialogSourceOptions, UseAskableDialogSourceResult, AskableDialogClosedEntry, AskableDialogEntry, AskableDialogKind, AskableDialogSourceSnapshot } from './useAskableDialogSource.js';
 
 export { useAskableMultistepSource } from './useAskableMultistepSource.js';
 export type { UseAskableMultistepSourceOptions, UseAskableMultistepSourceResult, AskableMultistepStep, AskableMultistepSourceSnapshot } from './useAskableMultistepSource.js';

@@ -37,6 +37,12 @@ export { createAskableFocusSource, elementToFocusSnapshot } from './focus-source
 export { createAskableMultistepSource, buildMultistepSnapshot } from './multistep-source.js';
 export { createAskableCartSource, buildCartSnapshot } from './cart-source.js';
 export {
+  buildDialogSnapshot,
+  collectAskableDialogs,
+  createAskableDialogObserver,
+  createAskableDialogSource,
+} from './dialog-source.js';
+export {
   WEB_CONTEXT_PROTOCOL,
   WEB_CONTEXT_VERSION,
   createWebContextPacket,
@@ -257,6 +263,15 @@ export type {
   AskableCartSourceSnapshot,
   AskableCartTotals,
 } from './cart-source.js';
+export type {
+  AskableCreateDialogSourceOptions,
+  AskableDialogClosedEntry,
+  AskableDialogEntry,
+  AskableDialogKind,
+  AskableDialogObserverHandle,
+  AskableDialogObserverOptions,
+  AskableDialogSourceSnapshot,
+} from './dialog-source.js';
 export { asMeta } from './types.js';
 export type {
   AskableContext,

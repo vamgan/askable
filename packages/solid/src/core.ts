@@ -17,6 +17,7 @@ export { useAskableDOMSource } from './useAskableDOMSource.js';
 export { useAskableStorageSource } from './useAskableStorageSource.js';
 export { useAskableNotificationSource } from './useAskableNotificationSource.js';
 export { useAskableCartSource } from './useAskableCartSource.js';
+export { useAskableDialogSource } from './useAskableDialogSource.js';
 export { useAskableMultistepSource } from './useAskableMultistepSource.js';
 export { useAskableRegionCapture } from './useAskableRegionCapture.js';
 export { useAskableTextSelectionCapture } from './useAskableTextSelectionCapture.js';

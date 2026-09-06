@@ -42,6 +42,7 @@ export { useAskableTimeSource } from './useAskableTimeSource.js';
 export { useAskableFocusSource } from './useAskableFocusSource.js';
 export { useAskableMultistepSource } from './useAskableMultistepSource.js';
 export { useAskableCartSource } from './useAskableCartSource.js';
+export { useAskableDialogSource } from './useAskableDialogSource.js';
 export { useAskableStream } from './useAskableStream.js';
 export { useAskableChat } from './useAskableChat.js';
 // Re-export typed meta utility from core for convenience
@@ -291,3 +292,11 @@ export type {
   AskableCartSourceSnapshot,
   AskableCartTotals,
 } from './useAskableCartSource.js';
+export type {
+  UseAskableDialogSourceOptions,
+  UseAskableDialogSourceResult,
+  AskableDialogClosedEntry,
+  AskableDialogEntry,
+  AskableDialogKind,
+  AskableDialogSourceSnapshot,
+} from './useAskableDialogSource.js';
